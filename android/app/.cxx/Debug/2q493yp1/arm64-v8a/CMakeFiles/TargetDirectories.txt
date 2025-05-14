@@ -1,0 +1,2 @@
+C:/Users/Lenovo/OneDrive/Documents/GitHub/Champion_Footballer/android/app/.cxx/Debug/2q493yp1/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/Lenovo/OneDrive/Documents/GitHub/Champion_Footballer/android/app/.cxx/Debug/2q493yp1/arm64-v8a/CMakeFiles/rebuild_cache.dir
