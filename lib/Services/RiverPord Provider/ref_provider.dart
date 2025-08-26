@@ -37,19 +37,112 @@ final userDataProvider = FutureProvider<WelcomeUser>((ref) async {
   final token =
       prefs.getString('auth_token'); // Retrieve token from shared preferences
   final response = await http.get(
-    Uri.parse('https://api.championfootballer.com/auth/data'),
+    Uri.parse('https://championfootballer-server.onrender.com/auth/data'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     },
   );
   if (response.statusCode == 200) {
+    print("API Response: ${response.body}");
     final json = jsonDecode(response.body);
     return WelcomeUser.fromJson(json['user']);
   } else {
+    print("Error: ${response.statusCode}, ${response.body}");
     throw Exception('Failed to load user data');
   }
 });
+
+Future<bool> joinLeague(String inviteCode, String token) async {
+  try {
+    final response = await http.post(
+      Uri.parse('https://championfootballer-server.onrender.com/leagues/join'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'inviteCode': inviteCode}),
+    );
+
+    print("Join league response: ${response.statusCode} - ${response.body}");
+
+    if (response.statusCode == 200) {
+      // Successfully joined the league
+      return true;
+    } else {
+      // Parse error message from backend
+      final data = jsonDecode(response.body);
+      final message = data['message'] ?? 'Failed to join league';
+      throw Exception(message);
+    }
+  } catch (e) {
+    print("Error joining league: $e");
+    throw Exception("Error joining league: $e");
+  }
+}
+
+
+Future<void> updateProfile({
+  required String? mainPosition,
+  required String? subPosition,
+  required String? preferredFoot,
+  required WidgetRef ref,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+
+  final response = await http.patch(
+    Uri.parse("https://championfootballer-server.onrender.com/profile"),
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer $token",
+    },
+    body: jsonEncode({
+      "mainPosition": mainPosition,
+      "position": subPosition,
+      "preferredFoot": preferredFoot,
+    }),
+  );
+
+  print("PATCH response: ${response.statusCode}, ${response.body}"); // 👈 debug
+
+  if (response.statusCode == 200) {
+    ref.refresh(userDataProvider); // refresh user data
+  } else {
+    throw Exception("Failed to update profile: ${response.body}");
+  }
+}
+
+// final userDataProvider = FutureProvider<WelcomeUser>((ref) async {
+//   final prefs = await SharedPreferences.getInstance();
+//   final token = prefs.getString('auth_token');
+//
+//   if (token == null || token.isEmpty) {
+//     print("⚠️ No token found in SharedPreferences");
+//     throw Exception("User not logged in");
+//   }
+//
+//   final response = await http.get(
+//     Uri.parse('https://championfootballer-server.onrender.com/auth/data'),
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Authorization': 'Bearer $token',
+//     },
+//   );
+//
+//   print("Status Code: ${response.statusCode}");
+//   print("Response: ${response.body}");
+//
+//   if (response.statusCode == 200) {
+//     final json = jsonDecode(response.body);
+//     return json['user'] != null
+//         ? WelcomeUser.fromJson(json['user'])
+//         : WelcomeUser.fromJson(json);
+//   } else {
+//     throw Exception('Failed to load user data');
+//   }
+// });
+
 //reset password
 
 final resetPasswordProvider =
@@ -92,10 +185,19 @@ final createLeagueProvider =
 });
 //joinleague with invite code
 
+// final joinLeagueProvider = FutureProvider.family
+//     .autoDispose<bool, JoinLeagueRequest>((ref, request) async {
+//   final service = ref.read(authServiceProvider);
+//   return service.joinLeague(request.inviteCode, request.token);
+// });
+//
+// final selectedLeagueProvider = StateProvider<LeaguesJoined?>((ref) => null);
+
+
 final joinLeagueProvider = FutureProvider.family
     .autoDispose<bool, JoinLeagueRequest>((ref, request) async {
-  final service = ref.read(authServiceProvider);
-  return service.joinLeague(request.inviteCode, request.token);
+  // Directly call the joinLeague function
+  return await joinLeague(request.inviteCode, request.token);
 });
 
 final selectedLeagueProvider = StateProvider<LeaguesJoined?>((ref) => null);
@@ -104,9 +206,11 @@ final selectedLeagueProvider = StateProvider<LeaguesJoined?>((ref) => null);
 
 final contactUsProvider =
     FutureProvider.family<bool, ContactRequest>((ref, request) async {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
   final response = await http.post(
-    Uri.parse('https://api.championfootballer.com/contact'),
-    headers: {'Content-Type': 'application/json'},
+    Uri.parse('https://championfootballer-server.onrender.com/'),
+    headers: {'Content-Type': 'application/json' , 'Authorization': 'Bearer $token'},
     body: jsonEncode(request.toJson()),
   );
 

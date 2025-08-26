@@ -39,22 +39,51 @@ import 'package:http/http.dart' as http;
 import '../../Utils/packages.dart';
 
 class AuthService {
+  // Future<Map<String, dynamic>> login(LoginRequest request) async {
+  //   final url = Uri.parse('https://championfootballer-server.onrender.com/auth/login');
+  //
+  //   final response = await http.post(
+  //     url,
+  //     headers: {"Content-Type": "application/json"},
+  //     body: jsonEncode(request.toJson()),
+  //   );
+  //   final data = jsonDecode(response.body) as Map<String, dynamic>;
+  //
+  //   if (response.statusCode == 200) {
+  //     // Save token locally
+  //     final token = data['token'];
+  //     if (token != null) {
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.setString('auth_token', token);
+  //     }
+  //
+  //     return data;
+  //   } else {
+  //     throw Exception(data['message'] ?? 'Login failed: ${response.body}');
+  //   }
+  // }
   Future<Map<String, dynamic>> login(LoginRequest request) async {
-    final url = Uri.parse('https://api.championfootballer.com/auth/login');
+    final url = Uri.parse('https://championfootballer-server.onrender.com/auth/login');
 
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(request.toJson()),
     );
+
     final data = jsonDecode(response.body) as Map<String, dynamic>;
+    print("Login response: $data"); // 👀 Debugging
 
     if (response.statusCode == 200) {
-      // Save token locally
-      final token = data['token'];
+      // Try common key variations
+      final token = data['token'] ?? data['accessToken'] ?? data['jwt'];
+
       if (token != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
+        print("Saved token: $token"); // Debugging
+      } else {
+        print("No token found in response!");
       }
 
       return data;
@@ -63,9 +92,10 @@ class AuthService {
     }
   }
 
+
 //signup
   Future<Map<String, dynamic>> signup(SignupRequest request) async {
-    final url = Uri.parse('https://api.championfootballer.com/auth/signup');
+    final url = Uri.parse('https://championfootballer-server.onrender.com/auth/register');
 
     final response = await http.post(
       url,

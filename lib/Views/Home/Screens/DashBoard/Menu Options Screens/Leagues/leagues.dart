@@ -210,7 +210,7 @@ class LeaguesScreen extends ConsumerWidget {
       appBar: CustomAppBar(titleText: "Leagues"),
       body: leaguesAsync.when(
         data: (user) {
-          final leagues = user.leaguesJoined ?? [];
+          final leagues = user.leagues ?? [];
 
           if (leagues.isEmpty) {
             return Center(child: Text("No leagues found"));

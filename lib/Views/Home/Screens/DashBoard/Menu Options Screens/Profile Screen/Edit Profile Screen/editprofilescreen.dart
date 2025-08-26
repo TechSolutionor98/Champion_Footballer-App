@@ -5,6 +5,8 @@ import 'package:champion_footballer/Utils/appextensions.dart';
 import 'package:champion_footballer/Utils/packages.dart';
 import 'package:champion_footballer/Widgets/genderradiobutton.dart';
 
+import '../../../../../../../Services/RiverPord Provider/ref_provider.dart';
+
 class EditProfileScreen extends ConsumerWidget {
   const EditProfileScreen({super.key});
 
@@ -595,8 +597,16 @@ Widget _buildPreferencesPage(BuildContext context, WidgetRef ref) {
               child: SecondaryButton(
                 fontSize: 14,
                 buttonText: "Update Player Card",
-                onPressFunction: () {
-                  // context.routeoffall(DashboardScreen2());
+                onPressFunction: () async {
+                  final positionState = ref.read(positionProvider);
+
+                  await updateProfile(
+                    mainPosition: positionState.selectedMain,
+                    subPosition: positionState.selectedSub,
+                    preferredFoot: positionState.selectedFoot,
+                    ref: ref,
+                  );
+
                   Navigator.pop(context);
                 },
               ),

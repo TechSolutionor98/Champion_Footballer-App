@@ -9,11 +9,13 @@ import 'package:champion_footballer/Views/Drawer%20Screens/privacypolicy.dart';
 import 'package:champion_footballer/Views/Drawer%20Screens/terms_condtion.dart';
 import 'package:champion_footballer/Widgets/buttonwithicon.dart';
 import 'package:champion_footballer/Widgets/secondarytextfield.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:toastification/toastification.dart';
 
 import '../../Controllers/profileprovider.dart';
 import '../../Model/Api Models/createleague_model.dart';
 import '../../Model/Api Models/joinleagueinvite_model.dart';
+import '../../Model/Api Models/usermodel.dart';
 import '../../Services/RiverPord Provider/logoutptovider.dart';
 import '../../Services/RiverPord Provider/ref_provider.dart';
 import '../../Utils/packages.dart';
@@ -136,7 +138,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
   //     },
   //   );
   // }
-  void _showJoinLeagueDialog() {
+  /*void _showJoinLeagueDialog() {
     final inviteCodeController = TextEditingController();
 
     showDialog(
@@ -259,6 +261,148 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
         );
       },
     );
+  }*/
+  void _showJoinLeagueDialog() {
+    final inviteCodeController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // prevent dismiss while loading
+      barrierColor: Colors.black.withValues(alpha: .6),
+      builder: (context) {
+        bool isLoading = false;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Enter Invite Code",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: kPrimaryColor,
+                          ),
+                        ),
+                        16.0.heightbox,
+                        PrimaryTextField(
+                          controller: inviteCodeController,
+                          hintText: "Invite Code",
+                          enablestate: !isLoading,
+                        ),
+                        20.0.heightbox,
+                        if (isLoading)
+                          const CircularProgressIndicator()
+                        else
+                          PrimaryButton(
+                            buttonText: "Join League",
+                            fontSize: 12,
+                            width: context.width * 0.4,
+                            onPressFunction: () async {
+                              final code = inviteCodeController.text.trim();
+                              if (code.isEmpty) {
+                                toastification.show(
+                                  context: context,
+                                  type: ToastificationType.error,
+                                  style: ToastificationStyle.fillColored,
+                                  title: const Text("Invite code is required"),
+                                );
+                                return;
+                              }
+
+                              // Check if already joined
+                              final joinedLeague = ref.read(selectedLeagueProvider); // This is LeaguesJoined?
+                              if (joinedLeague != null && joinedLeague.inviteCode == code) {
+                                toastification.show(
+                                  context: context,
+                                  type: ToastificationType.error,
+                                  style: ToastificationStyle.fillColored,
+                                  title: const Text("You have already joined this league"),
+                                );
+                                return;
+                              }
+
+                              // start loading
+                              setState(() => isLoading = true);
+
+                              final prefs = await SharedPreferences.getInstance();
+                              final token = prefs.getString('auth_token') ?? '';
+                              final request =
+                              JoinLeagueRequest(inviteCode: code, token: token);
+
+                              try {
+                                final success = await ref
+                                    .read(joinLeagueProvider(request).future);
+
+                                Navigator.pop(context); // close the dialog
+
+                                if (success) {
+                                  // Update local state to mark league as joined
+                                  ref.read(selectedLeagueProvider.notifier).state = LeaguesJoined(inviteCode: code);
+
+                                  toastification.show(
+                                    context: context,
+                                    type: ToastificationType.success,
+                                    style: ToastificationStyle.fillColored,
+                                    title: const Text(
+                                        "Joined league successfully"),
+                                  );
+                                } else {
+                                  toastification.show(
+                                    context: context,
+                                    type: ToastificationType.error,
+                                    style: ToastificationStyle.fillColored,
+                                    title: const Text("Failed to join league"),
+                                  );
+                                }
+                              } catch (e) {
+                                Navigator.pop(context);
+                                toastification.show(
+                                  context: context,
+                                  type: ToastificationType.error,
+                                  style: ToastificationStyle.fillColored,
+                                  title: Text("Error: ${e.toString()}"),
+                                );
+                              }
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  if (!isLoading)
+                    Positioned(
+                      right: 8,
+                      top: 6,
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: CircleAvatar(
+                          radius: 10,
+                          backgroundColor: kPrimaryColor.withValues(alpha: .8),
+                          child: Icon(Icons.close, size: 14, color: kdefwhiteColor),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void showBackDialog(BuildContext context) {
@@ -341,6 +485,113 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
         );
       },
     );
+  }
+
+  String getPositionShortForm(String? position) {
+    if (position == null || position.isEmpty) return "-";
+
+    // First try to extract from parentheses
+    final regex = RegExp(r'\(([^)]+)\)');
+    final match = regex.firstMatch(position);
+    if (match != null) {
+      return match.group(1)!; // return the text inside parentheses
+    }
+
+    // Map of known positions
+    final positionMap = <String, String>{
+      'center-back (cb)': 'CB',
+      'right-back (rb)': 'RB',
+      'left-back (lb)': 'LB',
+      'right wing-back (rwb)': 'RWB',
+      'left wing-back (lwb)': 'LWB',
+      'central midfielder (cm)': 'CM',
+      'defensive midfielder (cdm)': 'CDM',
+      'attacking midfielder (cam)': 'CAM',
+      'right midfielder (rm)': 'RM',
+      'left midfielder (lm)': 'LM',
+      'striker (st)': 'ST',
+      'center forward (cf)': 'CF',
+      'right forward (rf)': 'RF',
+      'left forward (lf)': 'LF',
+      'right winger (rw)': 'RW',
+      'left winger (lw)': 'LW',
+      'goalkeeper': 'GK',
+    };
+
+    final lowerPosition = position.toLowerCase();
+    if (positionMap.containsKey(lowerPosition)) {
+      return positionMap[lowerPosition]!;
+    }
+
+
+    return position.length <= 3
+        ? position.toUpperCase()
+        : position.toUpperCase().substring(0, 3);
+  }
+
+  int calculateSkillsPercentage(dynamic attributes) {
+    if (attributes == null) return 0;
+
+    final skills = [
+      attributes.pace ?? 50,
+      attributes.shooting ?? 50,
+      attributes.passing ?? 50,
+      attributes.defending ?? 50,
+      attributes.dribbling ?? 50,
+      attributes.physical ?? 50,
+    ];
+
+    final total = skills.reduce((a, b) => a + b);
+    final average = total / skills.length;
+
+    return ((average / 99) * 100).round();
+  }
+
+  final List<Level> levels = [
+    Level(level: 1, min: 0, max: 100, title: "Rookie", color: "green"),
+    Level(level: 2, min: 100, max: 250, title: "The Prospect", color: "green"),
+    Level(level: 3, min: 250, max: 500, title: "Rising Star", color: "green"),
+    Level(level: 4, min: 500, max: 1000, title: "The Skilled Player", color: "sky"),
+    Level(level: 5, min: 1000, max: 2000, title: "The Talented Player", color: "sky"),
+    Level(level: 6, min: 2000, max: 3000, title: "The Chosen One", color: "sky"),
+    Level(level: 7, min: 3000, max: 4000, title: "Serial Winner", color: "sky"),
+    Level(level: 8, min: 4000, max: 5000, title: "Supreme Player", color: "bronze"),
+    Level(level: 9, min: 5000, max: 6000, title: "The Invincible", color: "bronze"),
+    Level(level: 10, min: 6000, max: 7000, title: "The Maestro", color: "bronze"),
+    Level(level: 11, min: 7000, max: 8000, title: "Crème de la Crème", color: "bronze"),
+    Level(level: 12, min: 8000, max: 9000, title: "Elite", color: "silver"),
+    Level(level: 13, min: 9000, max: 10000, title: "World-Class", color: "silver"),
+    Level(level: 14, min: 10000, max: 12000, title: "The Undisputed", color: "silver"),
+    Level(level: 15, min: 12000, max: 15000, title: "Icon", color: "silver"),
+    Level(level: 16, min: 15000, max: 18000, title: "Generational Talent", color: "gold"),
+    Level(level: 17, min: 18000, max: 22000, title: "Legend of the Game", color: "gold"),
+    Level(level: 18, min: 22000, max: 25000, title: "Football Royalty", color: "gold"),
+    Level(level: 19, min: 25000, max: 30000, title: "Hall of Famer", color: "gold"),
+    Level(level: 20, min: 30000, max: 99999999, title: "Champion Footballer", color: "sky"),
+  ];
+
+  Level getLevelInfo(int points) {
+    return levels.firstWhere(
+          (lvl) => points >= lvl.min && points < lvl.max,
+      orElse: () => levels.last,
+    );
+  }
+
+  String getBadgeAsset(String color) {
+    switch (color.toLowerCase()) {
+      case "green":
+        return "assets/badges/green.svg";
+      case "bronze":
+        return "assets/badges/bronze.svg";
+      case "silver":
+        return "assets/badges/silver.svg";
+      case "gold":
+        return "assets/badges/golden.svg";
+      case "sky":
+        return "assets/badges/sky.svg";
+      default:
+        return "assets/badges/green.svg";
+    }
   }
 
   @override
@@ -593,6 +844,10 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                 ),
                             data: (user) {
                               final attributes = user.attributes;
+                              final userXp = user.xp ?? 0;
+                              final levelInfo = getLevelInfo(userXp);
+                              final badgeAsset = getBadgeAsset(levelInfo.color);
+                              final skillPercentage = calculateSkillsPercentage(attributes);
                               final attrList = [
                                 attributes?.pace,
                                 attributes?.shooting,
@@ -628,7 +883,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                         children: [
                                           10.0.heightbox,
                                           Text(
-                                            "NO. ${user.shirtNumber ?? "--"}",
+                                            "XP. ${user.xp ?? "--"}",
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: kdefwhiteColor,
@@ -642,15 +897,12 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                             children: [
                                               Column(
                                                 children: [
-                                                  Text(
-                                                    '$avgCRX',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: kdefwhiteColor,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
+                                                  SvgPicture.asset(
+                                                    badgeAsset,
+                                                    height: 28, // adjust size as needed
+                                                    width: 28,
                                                   ),
+                                                  SizedBox(height: 2,),
 
                                                   Container(
                                                     width: 25,
@@ -658,7 +910,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                                     color: kdefwhiteColor,
                                                   ),
                                                   Text(
-                                                    'CRX',
+                                                    getPositionShortForm(user.position ?? "--"),
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                       color: kdefwhiteColor,
@@ -751,30 +1003,57 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                             ],
                                           ),
                                           10.0.heightbox,
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                                                child: Text(
+                                                  "$skillPercentage",
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: kdefwhiteColor,
+                                                  ),
+                                                ),
+                                              ),
+                                              Text(
+                                                user.firstName!.toUpperCase(),
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: kdefwhiteColor,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+
+                                          // Level title only
                                           Text(
-                                            user.firstName!.toUpperCase(),
+                                            getLevelInfo(user.xp ?? 0).title,
                                             style: TextStyle(
-                                              fontSize: 12,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
                                               color: kdefwhiteColor,
-                                              fontWeight: FontWeight.w700,
                                             ),
+                                            textAlign: TextAlign.center,
                                           ),
                                           Text(
                                             (user.chemistryStyle ?? '')
                                                 .toUpperCase(),
                                             style: TextStyle(
-                                              fontSize: 10,
+                                              fontSize: 9,
                                               color: kdefwhiteColor,
                                               fontWeight: FontWeight.w700,
                                             ),
                                           ),
-                                          5.0.heightbox,
+                                          0.0.heightbox,
                                           Container(
                                             width: 60,
                                             height: 1,
                                             color: kdefwhiteColor,
                                           ),
-                                          10.0.heightbox,
+                                          5.0.heightbox,
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
@@ -835,7 +1114,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                 ),
                             error: (err, _) => SizedBox(
                                   height: context.height * 0.32,
-                                  child: Center(child: Text("Failed to load")),
+                                  child: Center(child: Text("Failed to load ${err}")),
                                 ),
                             data: (user) {
                               return Container(
@@ -895,7 +1174,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                       ),
                                       8.0.heightbox,
                                       // Show first joined league (or message if empty)
-                                      if (user.leaguesJoined!.isNotEmpty)
+                                      if (user.leagues!.isNotEmpty)
                                         GestureDetector(
                                           onTap: () async {
                                             showDialog(
@@ -917,7 +1196,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                                     .read(selectedLeagueProvider
                                                         .notifier)
                                                     .state =
-                                                user.leaguesJoined!.first;
+                                                user.leagues!.first;
                                             context
                                                 .route(const MatchesScreen());
                                           },
@@ -935,7 +1214,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                                 ),
                                                 10.0.widthbox,
                                                 Text(
-                                                  user.leaguesJoined!.first
+                                                  user.leagues!.first
                                                       .name!
                                                       .trim(),
                                                   style: TextStyle(

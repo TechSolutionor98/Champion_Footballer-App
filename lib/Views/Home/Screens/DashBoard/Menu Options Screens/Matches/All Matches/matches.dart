@@ -52,7 +52,7 @@ class MatchesScreen extends StatelessWidget {
                           final userAsync = ref.watch(userDataProvider);
                           return userAsync.when(
                             data: (user) {
-                              final leagues = user.leaguesJoined;
+                              final leagues = user.leagues;
                               return Container(
                                 padding: EdgeInsets.all(16),
                                 decoration: BoxDecoration(
