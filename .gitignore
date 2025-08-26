@@ -44,11 +44,3 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-
-#checking
-*.apk
-*.aab
-*.ipa
-*.zip
-*.tar
-*.gz
