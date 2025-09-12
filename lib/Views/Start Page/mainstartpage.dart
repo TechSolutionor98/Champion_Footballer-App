@@ -333,7 +333,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
     Level(level: 17, min: 18000, max: 22000, title: "Legend of the Game", color: "gold"),
     Level(level: 18, min: 22000, max: 25000, title: "Football Royalty", color: "gold"),
     Level(level: 19, min: 25000, max: 30000, title: "Hall of Famer", color: "gold"),
-    Level(level: 20, min: 30000, max: 99999999, title: "Champion Footballer", color: "sky"),
+    Level(level: 20, min: 30000, max: 99999999, title: "Champion Footballer", color: "black"),
   ];
 
   Level getLevelInfo(int points) {
@@ -355,6 +355,8 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
         return "assets/badges/golden.svg";
       case "sky":
         return "assets/badges/sky.svg";
+      case "black":
+        return "assets/badges/goat.png";
       default:
         return "assets/badges/green.svg";
     }
