@@ -11,9 +11,14 @@ class TrophyRoomScreen extends StatelessWidget {
         child: ScaffoldCustom(
           appBar: CustomAppBar(
             titleText: "Trophy Room",
-            appBarElevation: 4,
-            shadowColor: Colors.black26,
-            surfaceTintColor: Colors.grey[200],
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(229, 106, 22, 1), // orange
+                Color.fromRGBO(207, 35, 38, 1),  // red
+              ],
+            ),
           ),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +71,6 @@ class TrophyRoomScreen extends StatelessWidget {
                 child: TabBarView(
                   // controller: _tabController,
                   children: [
-                    // All Trophies Tab
                     SingleChildScrollView(
                       padding: defaultPadding(vertical: 20),
                       child: Column(
@@ -166,7 +170,7 @@ class TrophyRoomScreen extends StatelessWidget {
 
                           15.0.heightbox,
 
-                          // Trophies Grid
+
                           GridView.builder(
                             shrinkWrap: true,
                             physics: NeverScrollableScrollPhysics(),
@@ -207,7 +211,7 @@ class TrophyRoomScreen extends StatelessWidget {
                                     ),
                                     SizedBox(height: 3),
 
-                                    // Description (Ensures alignment)
+
                                     Text(
                                       trophy['description'],
                                       textAlign: TextAlign.center,
@@ -220,7 +224,7 @@ class TrophyRoomScreen extends StatelessWidget {
                                       ),
                                     ),
                                     5.0.heightbox,
-                                    // Trophy Image
+
                                     Expanded(
                                       child: Image.asset(
                                         trophy['image'],
@@ -230,7 +234,7 @@ class TrophyRoomScreen extends StatelessWidget {
                                     ),
 
                                     5.0.heightbox,
-                                    // TBC Label
+
                                     Container(
                                       width: double.infinity,
                                       padding: EdgeInsets.symmetric(
@@ -356,7 +360,7 @@ class TrophyRoomScreen extends StatelessWidget {
 
                           15.0.heightbox,
 
-                          // Trophies Grid
+
                           GridView.builder(
                             shrinkWrap: true,
                             physics: NeverScrollableScrollPhysics(),
@@ -394,7 +398,7 @@ class TrophyRoomScreen extends StatelessWidget {
                                     ),
                                     SizedBox(height: 3),
 
-                                    // Description (Ensures alignment)
+
                                     Text(
                                       "Second Place Player In The League Table",
                                       textAlign: TextAlign.center,
@@ -407,7 +411,7 @@ class TrophyRoomScreen extends StatelessWidget {
                                       ),
                                     ),
 
-                                    // Trophy Image
+
                                     Expanded(
                                       child: Image.asset(
                                         "assets/icons/trophy2.png",
@@ -417,7 +421,7 @@ class TrophyRoomScreen extends StatelessWidget {
                                     ),
 
                                     5.0.heightbox,
-                                    // TBC Label
+
                                     GestureDetector(
                                       onTap: () {
                                         context.route(MatchDetailScreen());
@@ -459,7 +463,7 @@ class TrophyRoomScreen extends StatelessWidget {
   }
 }
 
-// Trophy Data
+
 List<Map<String, dynamic>> trophies = [
   {
     'title': "Champion Footballer",

@@ -35,7 +35,17 @@ class DashBoard extends StatelessWidget {
     ];
 
     return ScaffoldCustom(
-      appBar: CustomAppBar(titleText: "Dashboard"),
+      appBar: CustomAppBar(
+        titleText: "Dashboard",
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
+          ],
+        ),
+      ),
       body: Padding(
         padding: defaultPadding(vertical: 15),
         child: Column(
@@ -44,7 +54,6 @@ class DashBoard extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    // First container in the row
                     Expanded(
                       child: GestureDetector(
                         onTap: () => Navigator.push(
@@ -85,7 +94,7 @@ class DashBoard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Second container in the row
+
                     Expanded(
                       child: GestureDetector(
                         onTap: () => Navigator.push(

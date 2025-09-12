@@ -94,5 +94,5 @@ class ThemeState {
   }
 }
 
-// Riverpod provider
+
 final themeProvider = NotifierProvider<ThemeNotifier, ThemeState>(() => ThemeNotifier());

@@ -1,3 +1,4 @@
+import 'package:champion_footballer/Model/Api%20Models/played_with_player_model.dart';
 import 'package:champion_footballer/Utils/appextensions.dart';
 import 'package:champion_footballer/Utils/packages.dart';
 
@@ -8,195 +9,225 @@ class PlayerListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(userDataProvider);
+    final playedWithPlayersData = ref.watch(playedWithPlayersProvider);
+    final searchQuery = ref.watch(playerSearchQueryProvider);
+
+    print("Current search query: '$searchQuery'");
+
     return ScaffoldCustom(
-      appBar: CustomAppBar(titleText: "Players"),
+      appBar: CustomAppBar(
+        titleText: "Players",
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
+          ],
+        ),
+      ),
       body: Padding(
         padding: defaultPadding(vertical: 10),
-        child: userAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text("Error: $e")),
-            data: (user) {
-              final selectedLeague = ref.watch(selectedLeagueProvider);
-              final players = selectedLeague?.users ?? [];
+        child: playedWithPlayersData.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text("Error: $e")),
+          data: (players) {
+            print("Total players from API: ${players.length}");
 
-              if (players.isEmpty) {
-                return const Center(
-                    child: Text("No players found in this league."));
-              }
+            final filteredPlayers = players.where((player) {
+              final nameLower = player.name.toLowerCase();
+              final searchLower = searchQuery.toLowerCase();
+              return nameLower.contains(searchLower);
+            }).toList();
+
+            print("Filtered players count: ${filteredPlayers.length} for query '$searchQuery'");
+
+            if (filteredPlayers.isEmpty && searchQuery.isNotEmpty) {
               return Column(
                 children: [
-                  // Search Bar
                   Padding(
                     padding: defaultPadding(),
                     child: PrimaryTextField(
                       hintText: "Search Players",
-                      bordercolor: kPrimaryColor.withValues(alpha: .5),
-                    ),
-                  ),
-                  15.0.heightbox,
-
-                  // Column Titles
-                  Row(
-                    children: const [
-                      // Expanded(
-                      //   flex: 1,
-                      //   child: Text("",
-                      //       style:
-                      //           TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      // ),
-                      Expanded(flex: 1, child: SizedBox()),
-                      Expanded(
-                        flex: 3,
-                        child: Text("Name",
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w600)),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text("Stats",
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: kblueColor)),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Text("Rating",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: kredColor,
-                            )),
-                      ),
-                    ],
-                  ),
-                  8.0.heightbox,
-
-                  // Player List
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: players.length,
-                      itemBuilder: (context, index) {
-                        final player = players[index];
-
-                        // Calculate average CRX
-                        final attributes = player.attributes;
-                        final attrList = [
-                          attributes?.pace,
-                          attributes?.shooting,
-                          attributes?.passing,
-                          attributes?.defending,
-                          attributes?.dribbling,
-                          attributes?.physical,
-                        ].whereType<int>().toList();
-
-                        final avgCRX = attrList.isNotEmpty
-                            ? (attrList.reduce((a, b) => a + b) /
-                                    attrList.length)
-                                .round()
-                            : 0;
-
-                        final bool isHighlighted = index == 0;
-                        return Row(
-                          children: [
-                            // Player Avatar
-                            CircleAvatar(
-                              backgroundImage: AssetImage(AppImages.profilepic),
-                              radius: 15,
-                            ),
-                            5.0.widthbox,
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  context.route(PlayerStatsScreen());
-                                },
-                                child: Container(
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: isHighlighted ? null : Colors.white,
-                                    gradient: isHighlighted
-                                        ? const LinearGradient(
-                                            colors: [
-                                              Color(0xFF666565),
-                                              Color(0xFF010101)
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          )
-                                        : null,
-                                    borderRadius: BorderRadius.circular(6),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.shade300,
-                                        blurRadius: 4,
-                                        spreadRadius: 2,
-                                        offset: const Offset(2, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // Player Name
-                                      Expanded(
-                                        flex: 3,
-                                        child: Text(
-                                          player.firstName ?? "Unknown",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: isHighlighted
-                                                ? kdefwhiteColor
-                                                : ktextColor,
-                                          ),
-                                        ),
-                                      ),
-
-                                      // Stats Icon
-                                      Expanded(
-                                        flex: 4,
-                                        child: Image.asset(
-                                          "assets/icons/stat.png",
-                                          color: isHighlighted
-                                              ? kdefwhiteColor
-                                              : kPrimaryColor,
-                                          width: 20,
-                                          height: 20,
-                                        ),
-                                      ),
-
-                                      20.0.widthbox,
-
-                                      // Rating Number
-                                      Expanded(
-                                        flex: 1,
-                                        child: Text(
-                                          "$avgCRX",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w600,
-                                            color: isHighlighted
-                                                ? Colors.white
-                                                : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
+                      bordercolor: kPrimaryColor.withOpacity(0.5),
+                      onChanged: (value) {
+                        print("PrimaryTextField onChanged CALLED with value: $value");
+                        ref.read(playerSearchQueryProvider.notifier).state = value;
                       },
                     ),
                   ),
+                  15.0.heightbox,
+                  const Center(child: Text("No players found matching your search.")),
                 ],
               );
-            }),
+            } else if (players.isEmpty) {
+               return const Center(
+                  child: Text("No players found. Play some matches!"));
+            }
+
+            return Column(
+              children: [
+                Padding(
+                  padding: defaultPadding(),
+                  child: PrimaryTextField(
+                    hintText: "Search Players",
+                    bordercolor: kPrimaryColor.withOpacity(0.5),
+                    onChanged: (value) {
+                      print("PrimaryTextField onChanged CALLED with value: $value");
+                      ref.read(playerSearchQueryProvider.notifier).state = value;
+                    },
+                  ),
+                ),
+                15.0.heightbox,
+
+                // Column Titles
+                Row(
+                  children: const [
+                    Expanded(flex: 1, child: SizedBox()),
+                    Expanded(
+                      flex: 3,
+                      child: Text("Name",
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w600)),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text("Shirt No.",
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: kblueColor)),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text("XP",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: kredColor,
+                          )),
+                    ),
+                  ],
+                ),
+                8.0.heightbox,
+
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: filteredPlayers.length,
+                    itemBuilder: (context, index) {
+                      final player = filteredPlayers[index];
+                      final bool isHighlighted = index == 0 && searchQuery.isEmpty;
+
+                      ImageProvider<Object> avatarImage;
+                      if (player.profilePicture != null && player.profilePicture!.isNotEmpty) {
+                        avatarImage = NetworkImage(player.profilePicture!);
+                      } else {
+                        avatarImage = AssetImage(AppImages.profilepic); // Fallback image
+                      }
+
+                      return Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: avatarImage,
+                            radius: 15,
+                            onBackgroundImageError: (_, __) {
+                              print("Error loading image for ${player.name}");
+                            },
+                          ),
+                          5.0.widthbox,
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context)=> PlayerStatsScreen()));
+                                print("Tapped on ${player.name}");
+                              },
+                              child: Container(
+                                margin:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: isHighlighted ? null : Colors.white,
+                                  gradient: isHighlighted
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF666565),
+                                            Color(0xFF010101)
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : null,
+                                  borderRadius: BorderRadius.circular(6),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.shade300,
+                                      blurRadius: 4,
+                                      spreadRadius: 2,
+                                      offset: const Offset(2, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        player.name,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: isHighlighted
+                                              ? kdefwhiteColor
+                                              : ktextColor,
+                                        ),
+                                      ),
+                                    ),
+
+                                    Expanded(
+                                      flex: 2,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 26.0),
+                                        child: Text(
+                                          player.shirtNumber ?? "N/A",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: isHighlighted ? kdefwhiteColor : kblueColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    Expanded(
+                                      flex: 1,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 9.0),
+                                        child: Text(
+                                          "${player.rating}",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                            color: isHighlighted ? Colors.white : Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

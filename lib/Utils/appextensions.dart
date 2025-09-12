@@ -25,26 +25,26 @@ extension NavigationExtension on BuildContext {
     //     .pushReplacement(MaterialPageRoute(builder: (context) => screen));
     Navigator.of(this).pushAndRemoveUntil(
       CupertinoPageRoute(builder: (context) => screen),
-      (Route<dynamic> route) => false, // Remove all previous routes
+      (Route<dynamic> route) => false,
     );
   }
 }
 
-//  extenstion for sizedbox you will only use like hieght.10
+
 
 extension SizedBoxExtension on double {
   SizedBox get heightbox => SizedBox(height: this);
   SizedBox get widthbox => SizedBox(width: this);
 }
 
-//  extenstion for mediaquery
+
 
 extension MediaQueryExtension on BuildContext {
   double get height => MediaQuery.of(this).size.height;
   double get width => MediaQuery.of(this).size.width;
 }
 
-//  extenstion for theme
+
 
 extension ThemeExtension on BuildContext {
   TextTheme get textTheme => Theme.of(this).textTheme;
@@ -68,7 +68,7 @@ class ScalePageRoute<T> extends PageRouteBuilder<T> {
         );
 }
 
-// snackbar
+
 extension SnackBarExtension on BuildContext {
   void showSnackBar(String message) {
     ScaffoldMessenger.of(this).showSnackBar(SnackBar(

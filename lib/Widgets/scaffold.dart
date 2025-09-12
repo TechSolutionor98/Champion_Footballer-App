@@ -88,7 +88,7 @@ class ScaffoldCustom extends StatelessWidget {
       body: Stack(
         children: [
           Image.asset(
-            AppImages.background, // Ensure the correct image path
+            AppImages.background,
             fit: BoxFit.cover,
             height: double.infinity,
             width: double.infinity,

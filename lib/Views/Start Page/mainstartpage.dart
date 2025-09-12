@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+import 'dart:io';
 
 import 'package:champion_footballer/Utils/appextensions.dart';
 import 'package:champion_footballer/Views/Drawer%20Screens/aboutus.dart';
@@ -10,6 +10,7 @@ import 'package:champion_footballer/Views/Drawer%20Screens/terms_condtion.dart';
 import 'package:champion_footballer/Widgets/buttonwithicon.dart';
 import 'package:champion_footballer/Widgets/secondarytextfield.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:toastification/toastification.dart';
 
 import '../../Controllers/profileprovider.dart';
@@ -29,245 +30,13 @@ class DashboardScreen2 extends ConsumerStatefulWidget {
 class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
   final formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  // void _showJoinLeagueDialog() {
-  //   final inviteCodeController = TextEditingController();
 
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: true,
-  //     barrierColor: Colors.black.withValues(alpha: 0.6), // Dimmed background
-  //     builder: (context) {
-  //       return Dialog(
-  //         shape:
-  //             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-  //         child: Stack(
-  //           children: [
-  //             Container(
-  //               padding: const EdgeInsets.all(20),
-  //               decoration: BoxDecoration(
-  //                 color: Colors.white,
-  //                 borderRadius: BorderRadius.circular(12),
-  //               ),
-  //               child: Column(
-  //                 mainAxisSize: MainAxisSize.min,
-  //                 children: [
-  //                   Text(
-  //                     "Enter Invite Code",
-  //                     style: TextStyle(
-  //                         fontSize: 14,
-  //                         fontWeight: FontWeight.bold,
-  //                         color: kPrimaryColor),
-  //                   ),
-  //                   16.0.heightbox,
-  //                   PrimaryTextField(
-  //                     controller: inviteCodeController,
-  //                     hintText: "Invite Code",
-  //                   ),
-  //                   20.0.heightbox,
-  //                   PrimaryButton(
-  //                     buttonText: "Join League",
-  //                     fontSize: 12,
-  //                     width: context.width * 0.4,
-  //                     onPressFunction: () async {
-  //                       final code = inviteCodeController.text.trim();
-  //                       if (code.isEmpty) {
-  //                         toastification.show(
-  //                           context: context,
-  //                           type: ToastificationType.error,
-  //                           style: ToastificationStyle.fillColored,
-  //                           title: const Text("Invite code is required"),
-  //                         );
-  //                         return;
-  //                       }
-
-  //                       Navigator.pop(context);
-
-  //                       final prefs = await SharedPreferences.getInstance();
-  //                       final token = prefs.getString('auth_token') ?? '';
-
-  //                       final request =
-  //                           JoinLeagueRequest(inviteCode: code, token: token);
-  //                       try {
-  //                         final success = await ref
-  //                             .read(joinLeagueProvider(request).future);
-  //                         if (success) {
-  //                           toastification.show(
-  //                             context: context,
-  //                             type: ToastificationType.success,
-  //                             style: ToastificationStyle.fillColored,
-  //                             title: const Text("Joined league successfully"),
-  //                           );
-  //                         } else {
-  //                           toastification.show(
-  //                             context: context,
-  //                             type: ToastificationType.error,
-  //                             style: ToastificationStyle.fillColored,
-  //                             title: const Text("Failed to join league"),
-  //                           );
-  //                         }
-  //                       } catch (e) {
-  //                         toastification.show(
-  //                           context: context,
-  //                           type: ToastificationType.error,
-  //                           style: ToastificationStyle.fillColored,
-  //                           title: Text("Error: ${e.toString()}"),
-  //                         );
-  //                       }
-  //                     },
-  //                   )
-  //                 ],
-  //               ),
-  //             ),
-
-  //             // Close (X) button
-  //             Positioned(
-  //               right: 8,
-  //               top: 6,
-  //               child: GestureDetector(
-  //                 onTap: () => Navigator.of(context).pop(),
-  //                 child: CircleAvatar(
-  //                   radius: 10,
-  //                   backgroundColor: kPrimaryColor.withValues(alpha: 0.8),
-  //                   child: Icon(Icons.close, size: 14, color: kdefwhiteColor),
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-  /*void _showJoinLeagueDialog() {
-    final inviteCodeController = TextEditingController();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false, // prevent dismiss while loading
-      barrierColor: Colors.black.withValues(alpha: .6),
-      builder: (context) {
-        bool isLoading = false;
-
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Stack(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Enter Invite Code",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: kPrimaryColor,
-                          ),
-                        ),
-                        16.0.heightbox,
-                        PrimaryTextField(
-                          controller: inviteCodeController,
-                          hintText: "Invite Code",
-                          enablestate: !isLoading,
-                        ),
-                        20.0.heightbox,
-                        // if loading, show spinner, else show button
-                        if (isLoading)
-                          const CircularProgressIndicator()
-                        else
-                          PrimaryButton(
-                            buttonText: "Join League",
-                            fontSize: 12,
-                            width: context.width * 0.4,
-                            onPressFunction: () async {
-                              final code = inviteCodeController.text.trim();
-                              if (code.isEmpty) {
-                                toastification.show(
-                                  context: context,
-                                  type: ToastificationType.error,
-                                  style: ToastificationStyle.fillColored,
-                                  title: const Text("Invite code is required"),
-                                );
-                                return;
-                              }
-
-                              // start loading
-                              setState(() => isLoading = true);
-
-                              final prefs =
-                                  await SharedPreferences.getInstance();
-                              final token = prefs.getString('auth_token') ?? '';
-                              final request = JoinLeagueRequest(
-                                  inviteCode: code, token: token);
-
-                              try {
-                                final success = await ref
-                                    .read(joinLeagueProvider(request).future);
-                                Navigator.pop(context); // close the dialog
-                                toastification.show(
-                                  context: context,
-                                  type: success
-                                      ? ToastificationType.success
-                                      : ToastificationType.error,
-                                  style: ToastificationStyle.fillColored,
-                                  title: Text(
-                                    success
-                                        ? "Joined league successfully"
-                                        : "Failed to join league",
-                                  ),
-                                );
-                              } catch (e) {
-                                Navigator.pop(context);
-                                toastification.show(
-                                  context: context,
-                                  type: ToastificationType.error,
-                                  style: ToastificationStyle.fillColored,
-                                  title: Text("Error: ${e.toString()}"),
-                                );
-                              }
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-
-                  // Close (X) button — only when not loading
-                  if (!isLoading)
-                    Positioned(
-                      right: 8,
-                      top: 6,
-                      child: GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: CircleAvatar(
-                          radius: 10,
-                          backgroundColor: kPrimaryColor.withValues(alpha: .8),
-                          child: Icon(Icons.close,
-                              size: 14, color: kdefwhiteColor),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }*/
   void _showJoinLeagueDialog() {
     final inviteCodeController = TextEditingController();
 
     showDialog(
       context: context,
-      barrierDismissible: false, // prevent dismiss while loading
+      barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: .6),
       builder: (context) {
         bool isLoading = false;
@@ -323,8 +92,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                 return;
                               }
 
-                              // Check if already joined
-                              final joinedLeague = ref.read(selectedLeagueProvider); // This is LeaguesJoined?
+                              final joinedLeague = ref.read(selectedLeagueProvider);
                               if (joinedLeague != null && joinedLeague.inviteCode == code) {
                                 toastification.show(
                                   context: context,
@@ -335,7 +103,6 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                 return;
                               }
 
-                              // start loading
                               setState(() => isLoading = true);
 
                               final prefs = await SharedPreferences.getInstance();
@@ -347,10 +114,12 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                 final success = await ref
                                     .read(joinLeagueProvider(request).future);
 
-                                Navigator.pop(context); // close the dialog
+                                Navigator.pop(context);
 
                                 if (success) {
-                                  // Update local state to mark league as joined
+                                  if (mounted) {
+                                    ref.invalidate(userDataProvider);
+                                  }
                                   ref.read(selectedLeagueProvider.notifier).state = LeaguesJoined(inviteCode: code);
 
                                   toastification.show(
@@ -490,14 +259,12 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
   String getPositionShortForm(String? position) {
     if (position == null || position.isEmpty) return "-";
 
-    // First try to extract from parentheses
     final regex = RegExp(r'\(([^)]+)\)');
     final match = regex.firstMatch(position);
     if (match != null) {
-      return match.group(1)!; // return the text inside parentheses
+      return match.group(1)!;
     }
 
-    // Map of known positions
     final positionMap = <String, String>{
       'center-back (cb)': 'CB',
       'right-back (rb)': 'RB',
@@ -522,7 +289,6 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
     if (positionMap.containsKey(lowerPosition)) {
       return positionMap[lowerPosition]!;
     }
-
 
     return position.length <= 3
         ? position.toUpperCase()
@@ -603,7 +369,10 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
     );
 
     final userAsync = ref.watch(userDataProvider);
+    final profileState = ref.watch(profileProvider);
     final profileNotifier = ref.read(profileProvider.notifier);
+    final isProfilePicAutoUploading = profileState.isAutoUploading;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -615,26 +384,40 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
       },
       child: ScaffoldCustom(
         scaffoldKey: scaffoldKey,
-        appBar: AppBar(
-          backgroundColor: kPrimaryColor,
-          foregroundColor: kdefwhiteColor,
-          toolbarHeight: 50,
-          title: Image.asset("assets/icons/appbarlogo.png", width: 220),
-          centerTitle: true,
-          leading: GestureDetector(
-            onTap: () {
-              if (scaffoldKey.currentState?.isDrawerOpen ?? false) {
-                scaffoldKey.currentState?.closeDrawer();
-              } else {
-                scaffoldKey.currentState?.openDrawer();
-              }
-            },
-            child: Icon(
-              Icons.more_vert,
-              size: 20,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            foregroundColor: kdefwhiteColor,
+            toolbarHeight: 50,
+            title: Image.asset("assets/icons/appbarlogo.png", width: 220),
+            centerTitle: true,
+            leading: GestureDetector(
+              onTap: () {
+                if (scaffoldKey.currentState?.isDrawerOpen ?? false) {
+                  scaffoldKey.currentState?.closeDrawer();
+                } else {
+                  scaffoldKey.currentState?.openDrawer();
+                }
+              },
+              child: const Icon(
+                Icons.more_vert,
+                size: 20,
+              ),
+            ),
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  transform: GradientRotation(177 * 3.1416 / 180),
+                  colors: [
+                    Color.fromRGBO(229, 106, 22, 1),
+                    Color.fromRGBO(207, 35, 38, 1),
+                  ],
+                  stops: [0.26, 1.0],
+                ),
+              ),
             ),
           ),
-        ),
         drawer: Drawer(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -777,7 +560,6 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                 ),
               ),
 
-              // Button at the end
               20.0.heightbox,
               GestureDetector(
                 onTap: _showJoinLeagueDialog,
@@ -838,11 +620,20 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                   child: Center(
                                       child: CircularProgressIndicator()),
                                 ),
-                            error: (err, _) => SizedBox(
-                                  height: context.height * 0.15,
-                                  child: Center(child: Text("Failed to load")),
-                                ),
+                            error: (err, stackTrace) {
+                              print("--- ERROR IN DashboardScreen2 (first .when) ---");
+                              print("Error object: $err");
+                              print("Stack trace: $stackTrace");
+                              print("------------------------------------------");
+                              return SizedBox(
+                                height: context.height * 0.15,
+                                child: Center(child: Text("Failed to load")), 
+                              );
+                            },
                             data: (user) {
+                              final Stopwatch dataProcessingAndCardBuildStopwatch = Stopwatch()..start();
+                              print("[MainStartPage] Entered 'data' block for user card.");
+
                               final attributes = user.attributes;
                               final userXp = user.xp ?? 0;
                               final levelInfo = getLevelInfo(userXp);
@@ -863,11 +654,11 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                       .round()
                                   : 0;
                               final footLetter = user.preferredFoot?.name
-                                      .substring(0, 1)
+                                      ?.substring(0, 1)
                                       .toUpperCase() ??
                                   "-";
 
-                              return Container(
+                              final userCardWidget = Container(
                                 height: context.height * 0.32,
                                 decoration: BoxDecoration(
                                   image: DecorationImage(
@@ -899,7 +690,7 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                                 children: [
                                                   SvgPicture.asset(
                                                     badgeAsset,
-                                                    height: 28, // adjust size as needed
+                                                    height: 28,
                                                     width: 28,
                                                   ),
                                                   SizedBox(height: 2,),
@@ -918,7 +709,6 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                                           FontWeight.w700,
                                                     ),
                                                   ),
-                                                  //add a container as divider here
                                                   Container(
                                                     width: 25,
                                                     height: 1,
@@ -950,52 +740,66 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                                 children: [
                                                   GestureDetector(
                                                     onTap: () {
-                                                      profileNotifier
-                                                          .showOptions(
-                                                              ref.context, ref);
+                                                      if (isProfilePicAutoUploading) {
+                                                        toastification.show(
+                                                          context: context,
+                                                          type: ToastificationType.info,
+                                                          style: ToastificationStyle.fillColored,
+                                                          title: const Text('Upload in progress...'),
+                                                          autoCloseDuration: const Duration(seconds: 2),
+                                                        );
+                                                        return;
+                                                      }
+                                                      profileNotifier.showOptions(context, ref, autoUpload: true);
                                                     },
                                                     child: Container(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              4.0),
+                                                      width: 48,
+                                                      height: 48,
+                                                      padding: const EdgeInsets.all(4.0),
                                                       decoration: BoxDecoration(
                                                           border: Border.all(
-                                                            color:
-                                                                kdefwhiteColor,
+                                                            color: kdefwhiteColor,
                                                             width: 2,
                                                           ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      12)),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(12),
-                                                        child: user.pictureKey !=
-                                                                null
-                                                            ? Image.network(
-                                                                'https://api.championfootballer.com/uploads/${user.pictureKey}',
-                                                                height: 40,
-                                                                width: 40,
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                                errorBuilder: (context,
-                                                                        error,
-                                                                        stackTrace) =>
-                                                                    Icon(
-                                                                        Icons
-                                                                            .person,
-                                                                        size:
-                                                                            40,
-                                                                        color: Colors
-                                                                            .white),
-                                                              )
-                                                            : Icon(Icons.person,
-                                                                size: 40,
-                                                                color: Colors
-                                                                    .white),
+                                                          borderRadius: BorderRadius.circular(12)
                                                       ),
+                                                      alignment: Alignment.center,
+                                                      child: isProfilePicAutoUploading
+                                                          ? SizedBox(
+                                                              width: 24,
+                                                              height: 24,
+                                                              child: CircularProgressIndicator(
+                                                                strokeWidth: 2.5,
+                                                                color: Colors.white,
+                                                              ),
+                                                            )
+                                                          : ClipRRect(
+                                                              borderRadius: BorderRadius.circular(12),
+                                                              child: (user.pictureKey != null && user.pictureKey!.isNotEmpty)
+                                                                  ? Image.network(
+                                                                      user.pictureKey!,
+                                                                      height: 40,
+                                                                      width: 40,
+                                                                      fit: BoxFit.cover,
+                                                                      loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                                                                        if (loadingProgress == null) return child;
+                                                                        return Center(
+                                                                          child: CircularProgressIndicator(
+                                                                            value: loadingProgress.expectedTotalBytes != null
+                                                                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                                                : null,
+                                                                            strokeWidth: 2,
+                                                                            color: Colors.white,
+                                                                          ),
+                                                                        );
+                                                                      },
+                                                                      errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                                                                        print("Error loading profile image in mainstartpage.dart: $error");
+                                                                        return Icon(Icons.person, size: 40, color: Colors.white);
+                                                                      },
+                                                                    )
+                                                                  : Icon(Icons.person, size: 40, color: Colors.white),
+                                                            ),
                                                     ),
                                                   ),
                                                 ],
@@ -1028,7 +832,6 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                             ],
                                           ),
 
-                                          // Level title only
                                           Text(
                                             getLevelInfo(user.xp ?? 0).title,
                                             style: TextStyle(
@@ -1104,6 +907,9 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                   ],
                                 ),
                               );
+                              dataProcessingAndCardBuildStopwatch.stop();
+                              print("[MainStartPage] User card 'data' block (calculations + widget prep) took: ${dataProcessingAndCardBuildStopwatch.elapsedMilliseconds}ms");
+                              return userCardWidget;
                             }),
                         60.0.heightbox,
                         userAsync.when(
@@ -1112,12 +918,21 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                   child: Center(
                                       child: CircularProgressIndicator()),
                                 ),
-                            error: (err, _) => SizedBox(
-                                  height: context.height * 0.32,
-                                  child: Center(child: Text("Failed to load ${err}")),
-                                ),
+                            error: (err, stackTrace) { 
+                              print("--- ERROR IN DashboardScreen2 (second .when) ---");
+                              print("Error object: $err");
+                              print("Stack trace: $stackTrace");
+                              print("------------------------------------------");
+                              return SizedBox(
+                                height: context.height * 0.15,
+                                child: Center(child: Text("Failed to load ${err}")), 
+                              );
+                            },
                             data: (user) {
-                              return Container(
+                              final Stopwatch welcomeMessageBuildStopwatch = Stopwatch()..start();
+                              print("[MainStartPage] Entered 'data' block for welcome message/league info.");
+
+                              final welcomeWidget = Container(
                                   padding: defaultPadding(vertical: 10),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
@@ -1173,7 +988,6 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                         textAlign: TextAlign.center,
                                       ),
                                       8.0.heightbox,
-                                      // Show first joined league (or message if empty)
                                       if (user.leagues!.isNotEmpty)
                                         GestureDetector(
                                           onTap: () async {
@@ -1187,8 +1001,6 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                                 );
                                               },
                                             );
-                                            await Future.delayed(const Duration(
-                                                milliseconds: 500));
                                             if (context.mounted) {
                                               Navigator.pop(context);
                                             }
@@ -1244,6 +1056,9 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                         ),
                                     ],
                                   ));
+                              welcomeMessageBuildStopwatch.stop();
+                              print("[MainStartPage] Welcome message 'data' block took: ${welcomeMessageBuildStopwatch.elapsedMilliseconds}ms");
+                              return welcomeWidget;
                             })
                       ]))),
               20.0.heightbox,
@@ -1267,90 +1082,112 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                     children: [
                       5.0.heightbox,
                       ButtonWithIcon(
-                          buttonText: "Create New League",
-                          leadingWidget: Image.asset(
-                            AppImages.plus,
-                            width: 15,
-                            height: 15,
-                            color: kdefwhiteColor,
-                          ),
-                          buttonColor: kblueColor,
-                          onPressFunction: () {
-                            final leagueNameController =
-                                TextEditingController();
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                CreateLeagueRequest? lastRequest;
-                                return Consumer(builder: (context, ref, _) {
-                                  final isLoading = lastRequest != null
-                                      ? ref
-                                          .watch(createLeagueProvider(
-                                              lastRequest!))
-                                          .isLoading
-                                      : false;
+                        buttonText: "Create New League",
+                        leadingWidget: Image.asset(
+                          AppImages.plus,
+                          width: 15,
+                          height: 15,
+                          color: kdefwhiteColor,
+                        ),
+                        buttonColor: kblueColor,
+                        onPressFunction: () async {
+                          File? pickedImage;
+                          final leagueNameController = TextEditingController();
 
-                                  void createLeague() async {
-                                    final name =
-                                        leagueNameController.text.trim();
-                                    if (name.isEmpty) {
-                                      toastification.show(
-                                        context: context,
-                                        type: ToastificationType.error,
-                                        style: ToastificationStyle.fillColored,
-                                        title: const Text(
-                                            "League name is required"),
-                                      );
-                                      return;
+                          await showDialog(
+                            context: context,
+                            builder: (context) {
+                              CreateLeagueRequest? lastRequest;
+                              bool submitting = false;
+
+                              return Consumer(builder: (context, ref, _) {
+                                return Dialog(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  child: StatefulBuilder(builder: (context, setState) {
+                                    final isLoadingFromProvider = lastRequest != null
+                                        ? ref.watch(createLeagueProvider(lastRequest!)).isLoading
+                                        : false;
+                                    final busy = submitting || isLoadingFromProvider;
+
+                                    Future<void> pickImage() async {
+                                      try {
+                                        final picker = ImagePicker();
+                                        final picked = await picker.pickImage(source: ImageSource.gallery);
+                                        if (picked != null) {
+                                          setState(() {
+                                            pickedImage = File(picked.path);
+                                          });
+                                        }
+                                      } catch (e) {
+                                        toastification.show(
+                                          context: context,
+                                          type: ToastificationType.error,
+                                          style: ToastificationStyle.fillColored,
+                                          title: Text("Image pick failed: $e"),
+                                        );
+                                      }
                                     }
 
-                                    final request =
-                                        CreateLeagueRequest(name: name);
-                                    lastRequest = request;
+                                    Future<void> createLeague() async {
+                                      final name = leagueNameController.text.trim();
+                                      if (name.isEmpty) {
+                                        toastification.show(
+                                          context: context,
+                                          type: ToastificationType.error,
+                                          style: ToastificationStyle.fillColored,
+                                          title: const Text("League name is required"),
+                                        );
+                                        return;
+                                      }
 
-                                    try {
-                                      await ref.read(
-                                          createLeagueProvider(request).future);
-                                      if (!context.mounted) return;
+                                      setState(() => submitting = true);
 
-                                      toastification.show(
-                                        context: context,
-                                        type: ToastificationType.success,
-                                        style: ToastificationStyle.fillColored,
-                                        title: const Text(
-                                            "League created successfully"),
+                                      final request = CreateLeagueRequest(
+                                        name: name,
+                                        image: pickedImage?.path,
                                       );
+                                      lastRequest = request;
 
-                                      Navigator.pop(context); // close dialog
-                                      // Optionally refresh league list here using ref.invalidate(...)
-                                    } catch (e) {
-                                      toastification.show(
-                                        context: context,
-                                        type: ToastificationType.error,
-                                        style: ToastificationStyle.fillColored,
-                                        title: Text(e.toString()),
-                                      );
+                                      try {
+                                        await ref.read(createLeagueProvider(request).future);
+
+                                        ref.invalidate(userDataProvider);
+                                        final updatedUser = await ref.read(userDataProvider.future);
+                                        final newLeague = updatedUser.leagues?.last;
+                                        ref.read(selectedLeagueProvider.notifier).state = newLeague;
+
+                                        if (!context.mounted) return;
+                                        toastification.show(
+                                          context: context,
+                                          type: ToastificationType.success,
+                                          style: ToastificationStyle.fillColored,
+                                          title: const Text("League created successfully"),
+                                        );
+
+                                        Navigator.pop(context);
+                                      } catch (e) {
+                                        toastification.show(
+                                          context: context,
+                                          type: ToastificationType.error,
+                                          style: ToastificationStyle.fillColored,
+                                          title: Text(e.toString()),
+                                        );
+                                        if (mounted) setState(() => submitting = false);
+                                      }
                                     }
-                                  }
 
-                                  return Dialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: StyledContainer(
+                                    return StyledContainer(
                                       padding: defaultPadding(vertical: 10),
                                       boxShadow: [],
-                                      borderColor:
-                                          kPrimaryColor.withValues(alpha: .2),
+                                      borderColor: kPrimaryColor.withValues(alpha: .2),
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               24.0.widthbox,
-                                              Text(
+                                              const Text(
                                                 "Create a League",
                                                 style: TextStyle(
                                                   fontSize: 14,
@@ -1359,29 +1196,17 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                                 ),
                                               ),
                                               GestureDetector(
-                                                onTap: () =>
-                                                    Navigator.pop(context),
+                                                onTap: () {
+                                                  if (!busy) Navigator.pop(context);
+                                                },
                                                 child: Container(
-                                                    padding: EdgeInsets.all(3),
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      color:
-                                                          Colors.grey.shade200,
-                                                    ),
-                                                    child: Text(
-                                                      String.fromCharCode(Icons
-                                                          .close.codePoint),
-                                                      style: TextStyle(
-                                                        fontFamily: Icons
-                                                            .close.fontFamily,
-                                                        package: Icons
-                                                            .close.fontPackage,
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: kdefblackColor,
-                                                      ),
-                                                    )),
+                                                  padding: const EdgeInsets.all(3),
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: Colors.grey.shade200,
+                                                  ),
+                                                  child: Icon(Icons.close, size: 15, color: kdefblackColor),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -1395,14 +1220,14 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                                   Colors.green.shade300,
                                                   Colors.green.shade100,
                                                 ],
-                                                stops: [0.0, 0.5, 1.0],
+                                                stops: const [0.0, 0.5, 1.0],
                                                 begin: Alignment.centerLeft,
                                                 end: Alignment.centerRight,
                                               ),
                                             ),
                                           ),
                                           10.0.heightbox,
-                                          // League Name Field
+
                                           Align(
                                             alignment: Alignment.centerLeft,
                                             child: Text(
@@ -1415,37 +1240,63 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                                             ),
                                           ),
                                           6.0.heightbox,
-                                          PrimaryTextField(
-                                            hintText: "",
-                                            bordercolor: ktextColor.withValues(
-                                                alpha: .4),
-                                            controller: leagueNameController,
+
+                                          Opacity(
+                                            opacity: busy ? 0.6 : 1.0,
+                                            child: AbsorbPointer(
+                                              absorbing: busy, 
+                                              child: PrimaryTextField(
+                                                hintText: "",
+                                                bordercolor: ktextColor.withValues(alpha: .4),
+                                                controller: leagueNameController,
+                                              ),
+                                            ),
+                                          ),
+
+                                          16.0.heightbox,
+
+                                          GestureDetector(
+                                            onTap: busy ? null : pickImage,
+                                            child: Container(
+                                              height: 100,
+                                              width: 100,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade200,
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: pickedImage != null
+                                                  ? ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: Image.file(pickedImage!, fit: BoxFit.cover),
+                                              )
+                                                  : Icon(Icons.image, color: ktextColor),
+                                            ),
                                           ),
                                           16.0.heightbox,
 
-                                          // Create League Button
                                           SizedBox(
                                             width: context.width / 2.5,
-                                            child: isLoading
-                                                ? const Center(
-                                                    child:
-                                                        CircularProgressIndicator())
-                                                : PrimaryButton(
-                                                    buttonText: 'Create League',
-                                                    fontSize: 12,
-                                                    onPressFunction: () {
-                                                      createLeague();
-                                                    },
-                                                  ),
+                                            child: Opacity(
+                                              opacity: busy ? 0.6 : 1.0, 
+                                              child: PrimaryButton(
+                                                buttonText: 'Create League',
+                                                fontSize: 12,
+                                                onPressFunction: busy ? null : createLeague, 
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                  );
-                                });
-                              },
-                            );
-                          }),
+                                    );
+                                  }),
+                                );
+                              });
+                            },
+                          );
+                        },
+                      ),
+
+
                       30.0.heightbox,
                       GestureDetector(
                         onTap: _showJoinLeagueDialog,
@@ -1517,21 +1368,14 @@ class _DashboardScreen2State extends ConsumerState<DashboardScreen2> {
                             },
                           );
 
-                          // Delay slightly to allow UI update
-                          await Future.delayed(
-                              const Duration(milliseconds: 500));
-
-                          // Remove loading dialog
                           if (context.mounted) {
                             Navigator.pop(context);
                           }
 
-                          // Set the bottom navigation index to Dashboard
                           ref
                               .read(bottomNavigationProvider.notifier)
                               .setTabIndex(4);
 
-                          // Navigate to Dashboard screen
                           context.route(Home());
                         },
                       ),

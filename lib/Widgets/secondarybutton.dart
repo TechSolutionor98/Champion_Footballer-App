@@ -36,7 +36,7 @@ class SecondaryButton extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border.all(color: borderColor ?? Colors.transparent),
           borderRadius:
-              BorderRadius.circular(borderRadius ?? 6), // ✅ Fixed here
+              BorderRadius.circular(borderRadius ?? 6),
           color: buttonColor ?? kPrimaryColor,
         ),
         child: Center(

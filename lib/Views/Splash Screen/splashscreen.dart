@@ -20,9 +20,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     _checkAuth();
   }
 
+  // Future<void> _checkAuth() async {
+  //   final result = await ref.read(authCheckProvider.future);
+  //   if (!mounted) return;
+  //   setState(() {
+  //     isLoggedIn = result;
+  //   });
+  // }
+
   Future<void> _checkAuth() async {
+    print("[SplashScreen] _checkAuth called.");
+
+    final prefsForDebug = await SharedPreferences.getInstance();
+    print("[SplashScreen] Token directly from SharedPreferences in _checkAuth: ${prefsForDebug.getString('auth_token')}");
+
     final result = await ref.read(authCheckProvider.future);
-    if (!mounted) return;
+    print("[SplashScreen] Result from authCheckProvider.future: $result");
+    print("[SplashScreen] isLoggedIn will be set to: $result");
+
+    if (!mounted) {
+      print("[SplashScreen] Not mounted, exiting _checkAuth.");
+      return;
+    }
     setState(() {
       isLoggedIn = result;
     });

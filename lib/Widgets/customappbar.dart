@@ -1,6 +1,6 @@
 import '../Utils/packages.dart';
 
-// Define your custom widget
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? titleText;
   final Widget? titleWidget;
@@ -12,6 +12,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color? shadowColor;
   final Color? foregroundColor;
   final Color? surfaceTintColor;
+  final Gradient? gradient;
   const CustomAppBar({
     super.key,
     this.titleText,
@@ -24,51 +25,58 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.shadowColor,
     this.foregroundColor,
     this.surfaceTintColor,
+    this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      leading: showLeading
-          ? GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Center(
-                child: Image.asset(
-                  "assets/images/backarrow.png",
-                  width: 15,
-                  height: 15,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: gradient,
+        color: gradient == null ? (backgroundColor ?? kPrimaryColor) : null,
+      ),
+      child: AppBar(
+        automaticallyImplyLeading: false,
+        leading: showLeading
+            ? GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Center(
+                  child: Image.asset(
+                    "assets/images/backarrow.png",
+                    width: 15,
+                    height: 15,
+                  ),
+                ),
+              )
+            : null,
+        centerTitle: true,
+        actions: [
+          if (action != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 15, bottom: 20),
+              child: GestureDetector(
+                onTap: tapaction,
+                child: SizedBox(
+                  width: 25,
+                  height: 25,
+                  child: action,
                 ),
               ),
-            )
-          : null,
-      centerTitle: true,
-      actions: [
-        if (action != null)
-          Padding(
-            padding: const EdgeInsets.only(right: 15, bottom: 20),
-            child: GestureDetector(
-              onTap: tapaction,
-              child: SizedBox(
-                width: 25,
-                height: 25,
-                child: action,
-              ),
             ),
-          ),
-      ],
-      elevation: appBarElevation ?? 0,
-      backgroundColor: backgroundColor ?? kPrimaryColor,
-      shadowColor: shadowColor ?? Colors.transparent,
-      foregroundColor: foregroundColor ?? kdefwhiteColor,
-      surfaceTintColor: surfaceTintColor ?? kPrimaryColor,
-      title: titleWidget ??
-          Text(
-            titleText ?? '',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+        ],
+        elevation: appBarElevation ?? 0,
+        backgroundColor: Colors.transparent,
+        shadowColor: shadowColor ?? Colors.transparent,
+        foregroundColor: foregroundColor ?? kdefwhiteColor,
+        surfaceTintColor: surfaceTintColor ?? kPrimaryColor,
+        title: titleWidget ??
+            Text(
+              titleText ?? '',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+      ),
     );
   }
 

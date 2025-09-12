@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class LeagueOptionTile extends StatelessWidget {
   final String leagueName;
-  //subtitle
+
   final String? subtitle;
   final VoidCallback? onTap;
   final Color? backgroundColor;

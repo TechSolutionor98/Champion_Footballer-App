@@ -80,7 +80,18 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldCustom(
-      appBar: CustomAppBar(titleText: "Contact Us"),
+      // appBar: CustomAppBar(titleText: "Contact Us"),
+      appBar: CustomAppBar(
+        titleText: "Contact Us",
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
+          ],
+        ),
+      ),
       body: GestureDetector(
         onTap: () {
           hideKeyboard(context);

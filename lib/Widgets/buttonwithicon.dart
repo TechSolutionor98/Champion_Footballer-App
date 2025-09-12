@@ -30,8 +30,8 @@ class ButtonWithIcon extends StatelessWidget {
   final double? fontSize;
   final BorderRadius? radius;
 
-  // final Color? iconColor; // Optional icon color
-  // final double? iconSize; // Optional icon size
+  // final Color? iconColor;
+  // final double? iconSize;
 
   @override
   Widget build(BuildContext context) {

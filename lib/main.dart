@@ -23,6 +23,10 @@ class MyApp extends ConsumerWidget {
           fontFamily: "Inter",
           primaryColor: kPrimaryColor,
           colorScheme: theme.currentColorScheme,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+          ),
           useMaterial3: true,
           fontFamilyFallback: const ['Inter-Bold']).copyWith(
         pageTransitionsTheme: const PageTransitionsTheme(

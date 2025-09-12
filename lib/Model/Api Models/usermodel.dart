@@ -73,6 +73,7 @@ class WelcomeUser {
   String? firstName;
   String? lastName;
   String? displayName;
+  String? positionType; // Added for position type
   String? position;
   int? xp;
   PreferredFoot? preferredFoot;
@@ -82,7 +83,8 @@ class WelcomeUser {
   int? age;
   String? ipAddress;
   String? gender;
-  PictureKey? pictureKey;
+  String? pictureKey; // This seems to be the one taking json["profilePicture"] in WelcomeUser.fromJson
+  String? profilePictureUrl; // Explicitly adding for clarity if needed, though pictureKey might be it.
   dynamic matchGuestForId;
   DateTime? createdAt;
   DateTime? updatedAt;
@@ -95,6 +97,7 @@ class WelcomeUser {
     this.firstName,
     this.lastName,
     this.displayName,
+    this.positionType, // Added to constructor
     this.position,
     this.xp,
     this.preferredFoot,
@@ -104,7 +107,8 @@ class WelcomeUser {
     this.age,
     this.ipAddress,
     this.gender,
-    this.pictureKey,
+    this.pictureKey, 
+    this.profilePictureUrl,
     this.matchGuestForId,
     this.createdAt,
     this.updatedAt,
@@ -118,6 +122,7 @@ class WelcomeUser {
     firstName: json["firstName"],
     lastName: json["lastName"],
     displayName: json["displayName"],
+    positionType: json["positionType"], // Mapped from JSON
     position: json["position"],
     preferredFoot: preferredFootValues.map[json["preferredFoot"]],
     chemistryStyle: json["chemistryStyle"],
@@ -129,7 +134,8 @@ class WelcomeUser {
     xp: json["xp"],
     ipAddress: json["ipAddress"],
     gender: json["gender"],
-    pictureKey: pictureKeyValues.map[json["pictureKey"]],
+    pictureKey: json["profilePicture"], // In WelcomeUser, json["profilePicture"] maps to pictureKey.
+    profilePictureUrl: json["profilePicture"], // Explicitly map to new field as well
     matchGuestForId: json["matchGuestForId"],
     createdAt: json["createdAt"] == null
         ? null
@@ -154,6 +160,7 @@ class WelcomeUser {
         "firstName": firstName,
         "lastName": lastName,
         "displayName": displayName,
+        "positionType": positionType, // Added to JSON serialization
         "position": position,
         "preferredFoot": preferredFootValues.reverse[preferredFoot],
         "chemistryStyle": chemistryStyle,
@@ -162,7 +169,8 @@ class WelcomeUser {
         "age": age,
         "ipAddress": ipAddress,
         "gender": gender,
-        "pictureKey": pictureKeyValues.reverse[pictureKey],
+        // If pictureKey was intended to hold the URL, use it. Otherwise, use profilePictureUrl.
+        "profilePicture": profilePictureUrl ?? pictureKey, 
         "matchGuestForId": matchGuestForId,
         "createdAt": createdAt?.toIso8601String(),
         "updatedAt": updatedAt?.toIso8601String(),
@@ -211,7 +219,6 @@ class AdminAttributes {
         "Dribbling": dribbling,
       };
 }
-
 class LeaguesJoined {
   String? id;
   String? name;
@@ -220,11 +227,12 @@ class LeaguesJoined {
   int? maxGames;
   bool? showPoints;
   DateTime? createdAt;
-  String? image;
   DateTime? updatedAt;
+  String? image;
   List<Admin>? admins;
   List<Match>? matches;
   List<UserElement>? users;
+  List<UserElement>? members;
 
   LeaguesJoined({
     this.id,
@@ -235,59 +243,159 @@ class LeaguesJoined {
     this.showPoints,
     this.createdAt,
     this.updatedAt,
+    this.image,
     this.admins,
     this.matches,
     this.users,
-    this.image
+    this.members,
   });
 
   factory LeaguesJoined.fromJson(Map<String, dynamic> json) => LeaguesJoined(
-        id: json["id"],
-        name: json["name"],
-        active: json["active"],
-        inviteCode: json["inviteCode"],
-        maxGames: json["maxGames"],
-        showPoints: json["showPoints"],
-        image: json["image"],
-        createdAt: json["createdAt"] == null
-            ? null
-            : DateTime.parse(json["createdAt"]),
-        updatedAt: json["updatedAt"] == null
-            ? null
-            : DateTime.parse(json["updatedAt"]),
-        admins: json["admins"] == null
-            ? []
-            : List<Admin>.from(json["admins"]!.map((x) => Admin.fromJson(x))),
-        matches: json["matches"] == null
-            ? []
-            : List<Match>.from(json["matches"]!.map((x) => Match.fromJson(x))),
-        users: json["users"] == null
-            ? []
-            : List<UserElement>.from(
-                json["users"]!.map((x) => UserElement.fromJson(x))),
-      );
+    id: json["id"],
+    name: json["name"],
+    active: json["active"],
+    inviteCode: json["inviteCode"],
+    maxGames: json["maxGames"],
+    showPoints: json["showPoints"],
+    image: json["image"],
+    createdAt: json["createdAt"] == null
+        ? null
+        : DateTime.parse(json["createdAt"]),
+    updatedAt: json["updatedAt"] == null
+        ? null
+        : DateTime.parse(json["updatedAt"]),
+    admins: json["admins"] == null
+        ? []
+        : List<Admin>.from(
+        json["admins"]!.map((x) => Admin.fromJson(x))),
+    matches: json["matches"] == null
+        ? []
+        : List<Match>.from(
+        json["matches"]!.map((x) => Match.fromJson(x))),
+    users: json["users"] == null
+        ? []
+        : List<UserElement>.from(
+        json["users"]!.map((x) => UserElement.fromJson(x))),
+    members: json["members"] == null
+        ? []
+        : List<UserElement>.from(
+        json["members"]!.map((x) => UserElement.fromJson(x))),
+  );
 
   Map<String, dynamic> toJson() => {
-        "id": id,
-        "name": name,
-        "active": active,
-        "inviteCode": inviteCode,
-        "maxGames": maxGames,
-        "image": image,
-        "showPoints": showPoints,
-        "createdAt": createdAt?.toIso8601String(),
-        "updatedAt": updatedAt?.toIso8601String(),
-        "admins": admins == null
-            ? []
-            : List<dynamic>.from(admins!.map((x) => x.toJson())),
-        "matches": matches == null
-            ? []
-            : List<dynamic>.from(matches!.map((x) => x.toJson())),
-        "users": users == null
-            ? []
-            : List<dynamic>.from(users!.map((x) => x.toJson())),
-      };
+    "id": id,
+    "name": name,
+    "active": active,
+    "inviteCode": inviteCode,
+    "maxGames": maxGames,
+    "showPoints": showPoints,
+    "image": image,
+    "createdAt": createdAt?.toIso8601String(),
+    "updatedAt": updatedAt?.toIso8601String(),
+    "admins": admins == null
+        ? []
+        : List<dynamic>.from(admins!.map((x) => x.toJson())),
+    "matches": matches == null
+        ? []
+        : List<dynamic>.from(matches!.map((x) => x.toJson())),
+    "users": users == null
+        ? []
+        : List<dynamic>.from(users!.map((x) => x.toJson())),
+    "members": members == null
+        ? []
+        : List<dynamic>.from(members!.map((x) => x.toJson())),
+  };
 }
+
+
+
+
+// class LeaguesJoined {
+//   String? id;
+//   String? name;
+//   bool? active;
+//   String? inviteCode;
+//   int? maxGames;
+//   bool? showPoints;
+//   DateTime? createdAt;
+//   String? image;
+//   DateTime? updatedAt;
+//   List<Admin>? admins;
+//   List<Match>? matches;
+//   List<UserElement>? users;
+//   List<UserElement>? members; // <-- new field
+//
+//
+//   LeaguesJoined({
+//     this.id,
+//     this.name,
+//     this.active,
+//     this.inviteCode,
+//     this.maxGames,
+//     this.showPoints,
+//     this.createdAt,
+//     this.updatedAt,
+//     this.admins,
+//     this.matches,
+//     this.users,
+//     this.members,
+//     this.image
+//   });
+//
+//   factory LeaguesJoined.fromJson(Map<String, dynamic> json) => LeaguesJoined(
+//         id: json["id"],
+//         name: json["name"],
+//         active: json["active"],
+//         inviteCode: json["inviteCode"],
+//         maxGames: json["maxGames"],
+//         showPoints: json["showPoints"],
+//         image: json["image"],
+//         createdAt: json["createdAt"] == null
+//             ? null
+//             : DateTime.parse(json["createdAt"]),
+//         updatedAt: json["updatedAt"] == null
+//             ? null
+//             : DateTime.parse(json["updatedAt"]),
+//         admins: json["admins"] == null
+//             ? []
+//             : List<Admin>.from(json["admins"]!.map((x) => Admin.fromJson(x))),
+//         matches: json["matches"] == null
+//             ? []
+//             : List<Match>.from(json["matches"]!.map((x) => Match.fromJson(x))),
+//         users: json["users"] == null
+//             ? []
+//             : List<UserElement>.from(
+//             json["users"]!.map((x) => UserElement.fromJson(x))),
+//           members: json["members"] == null
+//             ? []
+//             : List<UserElement>.from(
+//                 json["users"]!.map((x) => UserElement.fromJson(x))),
+//       );
+//
+//   Map<String, dynamic> toJson() => {
+//         "id": id,
+//         "name": name,
+//         "active": active,
+//         "inviteCode": inviteCode,
+//         "maxGames": maxGames,
+//         "image": image,
+//         "showPoints": showPoints,
+//         "createdAt": createdAt?.toIso8601String(),
+//         "updatedAt": updatedAt?.toIso8601String(),
+//         "admins": admins == null
+//             ? []
+//             : List<dynamic>.from(admins!.map((x) => x.toJson())),
+//         "matches": matches == null
+//             ? []
+//             : List<dynamic>.from(matches!.map((x) => x.toJson())),
+//         "users": users == null
+//             ? []
+//             : List<dynamic>.from(users!.map((x) => x.toJson())),
+//         "members": members == null
+//             ? []
+//             : List<dynamic>.from(members!.map((x) => x.toJson())),
+//       };
+// }
 
 class Admin {
   String? id;
@@ -507,8 +615,7 @@ class Match {
   DateTime? date;
   String? location;
   String? status;
-  dynamic score; // Can be null, String, or a structured object. Dynamic is safest initially.
-  // Consider creating a Score model if it's structured e.g. {"home": 1, "away": 0}
+  dynamic score;
   String? leagueId;
   String? homeTeamName;
   String? awayTeamName;
@@ -527,7 +634,7 @@ class Match {
   List<UserElement>? homeTeamUsers;
   List<UserElement>? awayTeamUsers;
   List<Statistic>? statistics;
-  List<Vote>? votes; // Included as it was in your previous model, make it optional
+  List<Vote>? votes;
 
   Match({
     this.id,
@@ -562,7 +669,7 @@ class Match {
       date: _parseDateTime(json["date"]),
       location: json["location"],
       status: json["status"],
-      score: json["score"], // Assign directly, handle its type in UI or with a dedicated model
+      score: json["score"],
       leagueId: json["leagueId"],
       homeTeamName: json["homeTeamName"],
       awayTeamName: json["awayTeamName"],
@@ -593,7 +700,7 @@ class Match {
           ? []
           : List<Statistic>.from(
           json["statistics"]!.map((x) => Statistic.fromJson(x))),
-      votes: json["votes"] == null // If "votes" might be missing from JSON
+      votes: json["votes"] == null
           ? []
           : List<Vote>.from(
           json["votes"]!.map((x) => Vote.fromJson(x))),
@@ -821,12 +928,14 @@ class UserElement {
   String? chemistryStyle;
   String? shirtNumber;
   AwayTeamUserAttributes? attributes;
-  PictureKey? pictureKey;
+  PictureKey? pictureKey; // Existing enum for picture key
+  String? profilePicture; // New field for the profile picture URL string
   String? password;
   String? matchGuestForId;
   DateTime? createdAt;
   DateTime? updatedAt;
   List<Statistic>? matchStatistics;
+
 
   UserElement({
     this.id,
@@ -839,6 +948,7 @@ class UserElement {
     this.shirtNumber,
     this.attributes,
     this.pictureKey,
+    this.profilePicture, // Added to constructor
     this.password,
     this.matchGuestForId,
     this.createdAt,
@@ -859,6 +969,7 @@ class UserElement {
             ? null
             : AwayTeamUserAttributes.fromJson(json["attributes"]),
         pictureKey: pictureKeyValues.map[json["pictureKey"]],
+        profilePicture: json["profilePicture"] as String?, // Mapped from JSON
         password: json["password"],
         matchGuestForId: json["matchGuestForId"],
         createdAt: json["createdAt"] == null
@@ -884,6 +995,7 @@ class UserElement {
         "shirtNumber": shirtNumber,
         "attributes": attributes?.toJson(),
         "pictureKey": pictureKeyValues.reverse[pictureKey],
+        "profilePicture": profilePicture, // Added to JSON serialization
         "password": password,
         "matchGuestForId": matchGuestForId,
         "createdAt": createdAt?.toIso8601String(),
@@ -1064,3 +1176,43 @@ class Level {
     required this.color,
   });
 }
+
+class PlayerStats {
+  final String id;
+  final String firstName;
+  final String lastName;
+  final int goals;
+  final int assists;
+  final int cleanSheets;
+  final int votes;
+
+  PlayerStats({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    required this.goals,
+    required this.assists,
+    required this.cleanSheets,
+    this.votes = 0,
+  });
+
+  factory PlayerStats.fromJson(Map<String, dynamic> json) {
+    final stats = (json['statistics'] as List?)?.isNotEmpty == true
+        ? json['statistics'][0] as Map<String, dynamic>
+        : null;
+
+    return PlayerStats(
+      id: json['id'] ?? '',
+      firstName: json['firstName'] ?? '',
+      lastName: json['lastName'] ?? '',
+      goals: stats?['goals'] ?? 0,
+      assists: stats?['assists'] ?? 0,
+      cleanSheets: stats?['cleanSheets'] ?? 0,
+      votes: 0,
+    );
+  }
+}
+
+
+
+

@@ -72,6 +72,10 @@ class SkillMarkingNotifier extends Notifier<SkillMarkingState> {
     'Physical (PHY)',
   ];
 
+  String _getSkillApiKey(String skillNameWithExtra) {
+    return skillNameWithExtra.split(' ')[0].toLowerCase();
+  }
+
   void updateShirtNumber(String value) {
     state = state.copyWith(shirtNumber: value);
   }
@@ -80,6 +84,17 @@ class SkillMarkingNotifier extends Notifier<SkillMarkingState> {
     final updatedSkills = [...state.skillValues];
     updatedSkills[index] = value;
     state = state.copyWith(skillValues: updatedSkills);
+  }
+
+  Map<String, int> getSkillsMap() {
+    final Map<String, int> skillsMap = {};
+    for (int i = 0; i < skillNames.length; i++) {
+      if (i < state.skillValues.length) {
+        final apiKey = _getSkillApiKey(skillNames[i]);
+        skillsMap[apiKey] = state.skillValues[i];
+      }
+    }
+    return skillsMap;
   }
 }
 

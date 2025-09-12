@@ -43,7 +43,6 @@ EdgeInsets defaultPadding({double vertical = 0.0, double horizontal = 15.0}) {
 
 BorderRadius defaultBorderRadious = BorderRadius.circular(6);
 const Duration defaultDuration = Duration(milliseconds: 300);
-// Define defaultBoxShadow as a reusable shadow
 List<BoxShadow> defaultBoxShadow = [
   BoxShadow(
     color: Colors.black.withValues(alpha: .3),

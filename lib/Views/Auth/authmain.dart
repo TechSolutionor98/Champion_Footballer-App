@@ -70,7 +70,6 @@ class AuthScreen extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 30),
-                      // Conditional Rendering for Forms
                       authState.isLogin
                           ? const LoginForm()
                           : const RegisterForm(),

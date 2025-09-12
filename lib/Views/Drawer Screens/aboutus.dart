@@ -7,7 +7,17 @@ class AboutUs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScaffoldCustom(
-      appBar: CustomAppBar(titleText: "About CF"),
+      appBar: CustomAppBar(
+        titleText: "About CF",
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: defaultPadding(vertical: 10),
         child: Column(

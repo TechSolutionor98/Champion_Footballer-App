@@ -9,7 +9,6 @@ class PlayerProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String profileImage = AppImages.ronaldo;
 
     return Consumer(builder: (context, ref, _) {
       final userAsync = ref.watch(userDataProvider);
@@ -30,7 +29,17 @@ class PlayerProfileScreen extends StatelessWidget {
           final physicalInfo = getSkillLevelAndColor(physical);
 
           return ScaffoldCustom(
-            appBar: CustomAppBar(titleText: "Profile"),
+            appBar: CustomAppBar(
+              titleText: "Profile",
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.fromRGBO(229, 106, 22, 1),
+                  Color.fromRGBO(207, 35, 38, 1),
+                ],
+              ),
+            ),
             body: SingleChildScrollView(
               padding: defaultPadding(vertical: 10),
               child: Column(
@@ -77,12 +86,29 @@ class PlayerProfileScreen extends StatelessWidget {
                               padding: EdgeInsets.all(3),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(5),
-                                child: Image.network(
-                                  user.pictureKey != null
-                                      ? "https://api.championfootballer.com/auth/image/${pictureKeyValues.reverse[user.pictureKey]}"
-                                      : profileImage,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: (user.pictureKey != null && user.pictureKey!.isNotEmpty)
+                                    ? Image.network(
+                                        user.pictureKey!,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity, 
+                                        height: double.infinity,
+                                        loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                                          if (loadingProgress == null) return child;
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                              value: loadingProgress.expectedTotalBytes != null
+                                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                  : null,
+                                              strokeWidth: 2,
+                                            ),
+                                          );
+                                        },
+                                        errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                                          print("Error loading profile image in ProfileScreen: $error");
+                                          return Icon(Icons.person, size: 40, color: Colors.grey[400]);
+                                        },
+                                      )
+                                    : Icon(Icons.person, size: 40, color: Colors.grey[400]),
                               ),
                             ),
                             8.0.heightbox,
@@ -120,9 +146,9 @@ class PlayerProfileScreen extends StatelessWidget {
                     ],
                   ),
                   10.0.heightbox,
-                  _buildFieldSpaced("Position Type", "Goal Keeper"),
+                  _buildFieldSpaced("Position Type", user.positionType ?? "N/A"),
                   _buildFieldSpaced("Position", user.position ?? "N/A"),
-                  _buildFieldSpaced("Playing Style", "Axe"),
+                  _buildFieldSpaced("Playing Style", user.chemistryStyle ?? "N/A"),
                   _buildFieldSpaced(
                       "Preferred Foot", user.preferredFoot?.name ?? "N/A"),
                   _buildFieldSpaced(
@@ -150,14 +176,12 @@ class PlayerProfileScreen extends StatelessWidget {
     });
   }
 
-// **Reusable Field Widget (Aligned Labels + Dynamic Value Width, Read-Only)**
   Widget _buildField(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // **Fixed Width Label to Keep Alignment**
           SizedBox(
             width: 70,
             child: Text(
@@ -170,7 +194,6 @@ class PlayerProfileScreen extends StatelessWidget {
             ),
           ),
 
-          // **Dynamic Width Value Field**
           Flexible(
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -197,26 +220,26 @@ class PlayerProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFieldSpaced(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          // **Label**
-          SizedBox(
-            width: 180,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: ktextColor,
-              ),
+ Widget _buildFieldSpaced(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    child: Row(
+      children: [
+        SizedBox(
+          width: 180,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: ktextColor,
             ),
           ),
+        ),
 
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+        Expanded(
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: kdefwhiteColor,
               borderRadius: BorderRadius.circular(3),
@@ -232,12 +255,15 @@ class PlayerProfileScreen extends StatelessWidget {
                 color: ktexthintColor,
                 fontWeight: FontWeight.w500,
               ),
+              // softWrap: true, // Default, text should wrap
+              // overflow: TextOverflow.ellipsis,
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildAttribute(String title, int value, String level, Color color) {
     return Padding(

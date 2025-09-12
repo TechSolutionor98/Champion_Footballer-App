@@ -1,3 +1,4 @@
+import 'dart:io'; // Required for File type
 import 'package:champion_footballer/Controllers/postioncontrollprovider.dart';
 import 'package:champion_footballer/Controllers/profileprovider.dart';
 import 'package:champion_footballer/Controllers/skillmarkingprovider.dart';
@@ -12,6 +13,10 @@ class PlayerMakingScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pageController = PageController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(profileProvider.notifier).clearSelectionState();
+    });
+    
     return GestureDetector(
       onTap: () {
         hideKeyboard(context);
@@ -19,6 +24,14 @@ class PlayerMakingScreen extends ConsumerWidget {
       child: ScaffoldCustom(
         appBar: CustomAppBar(
           titleText: "Create Profile",
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(229, 106, 22, 1),
+              Color.fromRGBO(207, 35, 38, 1),
+            ],
+          ),
           action: PopupMenuButton<String>(
             iconSize: 25,
             onSelected: (value) {},
@@ -44,16 +57,12 @@ class PlayerMakingScreen extends ConsumerWidget {
               child: PageView(
                 controller: pageController,
                 children: [
-                  // Page 1: Personal Information
                   _buildPlayerChracteristics(ref),
-                  // Page 2: Contact Information
                   _builSkillMarkingPage(ref),
-                  // Page 3: Preferences
                   _buildPreferencesPage(context, ref),
                 ],
               ),
             ),
-            // SmoothPageIndicator
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 5.0),
               child: SmoothPageIndicator(
@@ -74,7 +83,8 @@ class PlayerMakingScreen extends ConsumerWidget {
   }
 
 Widget _buildPlayerChracteristics(WidgetRef ref) {
-  final profile = ref.watch(profileProvider);
+  final profileState = ref.watch(profileProvider);
+  final File? actualProfileImageFile = profileState.selectedFile;
   final profileNotifier = ref.read(profileProvider.notifier);
 
   final positionState = ref.watch(positionProvider);
@@ -92,7 +102,7 @@ Widget _buildPlayerChracteristics(WidgetRef ref) {
           Center(
             child: GestureDetector(
               onTap: () {
-                 profileNotifier.showOptions(ref.context, ref);
+                 profileNotifier.showOptions(ref.context, ref, autoUpload: false); 
               },
               child: Container(
                 padding: EdgeInsets.all(8),
@@ -110,9 +120,9 @@ Widget _buildPlayerChracteristics(WidgetRef ref) {
                     borderRadius: BorderRadius.circular(6),
                     color: Colors.transparent,
                     image: DecorationImage(
-                       image: profile == null
+                       image: actualProfileImageFile == null
                         ? const AssetImage("assets/images/editpic.png")
-                        : FileImage(profile),
+                        : FileImage(actualProfileImageFile) as ImageProvider,
                     fit: BoxFit.cover,
                     ),
                   ),
@@ -276,7 +286,6 @@ Widget _buildPlayerChracteristics(WidgetRef ref) {
                 
               ),
               10.0.heightbox,
-              // Style of Playing
 
              Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,7 +442,6 @@ Widget _buildPlayerChracteristics(WidgetRef ref) {
           ),
         ]),
       );
-    }
   }
 
 Widget _builSkillMarkingPage(WidgetRef ref) {
@@ -501,7 +509,6 @@ Widget _builSkillMarkingPage(WidgetRef ref) {
                                 },
                               ),
                             ),
-                            // slider value
                             Text(
                               skillValue.toString(),
                               style: TextStyle(
@@ -510,7 +517,6 @@ Widget _builSkillMarkingPage(WidgetRef ref) {
                                 color: skillLevelColor,
                               ),
                             ),
-                            // Skill Level Text
                             Text(
                               skillLevelText,
                               style: TextStyle(
@@ -604,6 +610,8 @@ Widget _builSkillMarkingPage(WidgetRef ref) {
             fontSize: 16,
             buttonText: "Create Player Card",
             onPressFunction: () {
+              final File? imageToCreate = ref.read(profileProvider).selectedFile;
+              print("Image to create with: $imageToCreate");
               context.routeoffall(DashboardScreen2());
             },
           ),
@@ -611,3 +619,4 @@ Widget _builSkillMarkingPage(WidgetRef ref) {
       ),
     );
   }
+}

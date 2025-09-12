@@ -7,13 +7,23 @@ class MatchDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScaffoldCustom(
-      appBar: CustomAppBar(titleText: "Match Detail"),
+      // appBar: CustomAppBar(titleText: "Match Detail"),
+      appBar: CustomAppBar(
+        titleText: "Match Detail",
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Match Score Container
             StyledContainer(
               padding: defaultPadding(vertical: 10),
               boxShadow: [],
@@ -211,7 +221,7 @@ class MatchDetailScreen extends StatelessWidget {
             ),
             20.0.heightbox,
 
-            // Match Predictions Section
+
             Text(
               "Match Predictions",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),

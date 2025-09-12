@@ -42,24 +42,21 @@ class SelectPlayersScreenState extends State<SelectPlayersScreen> {
   @override
   void initState() {
     super.initState();
-    _assignInitialTeams(); // Assign players in order
+    _assignInitialTeams();
   }
 
   void _assignInitialTeams() {
     setState(() {
-      // Split players into home and away teams without shuffling
       int mid = players.length ~/ 2;
       homePlayers = players.sublist(0, mid);
       awayPlayers = players.sublist(mid);
 
-      // Team balance (static initially)
       teamBalance = (homePlayers.length / players.length) * 100;
     });
   }
 
   void shuffleTeams() {
     setState(() {
-      // Shuffle only the homePlayers and awayPlayers without affecting original list
       List<Map<String, String>> shuffledPlayers = List.from(players);
       shuffledPlayers.shuffle(Random());
 
@@ -67,7 +64,6 @@ class SelectPlayersScreenState extends State<SelectPlayersScreen> {
       homePlayers = shuffledPlayers.sublist(0, mid);
       awayPlayers = shuffledPlayers.sublist(mid);
 
-      // Update team balance dynamically
       teamBalance = (homePlayers.length / players.length) * 100;
     });
   }
@@ -75,7 +71,18 @@ class SelectPlayersScreenState extends State<SelectPlayersScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldCustom(
-      appBar: CustomAppBar(titleText: "Select Players"),
+      // appBar: CustomAppBar(titleText: "Select Players"),
+      appBar: CustomAppBar(
+        titleText: "Select Players",
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: defaultPadding(vertical: 10),
         child: Column(
@@ -106,7 +113,7 @@ class SelectPlayersScreenState extends State<SelectPlayersScreen> {
                   ),
 
                   15.0.heightbox,
-                  // Add Guest Player Field
+
                   Row(
                     children: [
                       Expanded(
@@ -238,7 +245,6 @@ class SelectPlayersScreenState extends State<SelectPlayersScreen> {
 
             20.0.heightbox,
 
-            // Team Shuffle Section
             StyledContainer(
               padding: defaultPadding(vertical: 10),
               borderColor: kPrimaryColor.withValues(alpha: .5),

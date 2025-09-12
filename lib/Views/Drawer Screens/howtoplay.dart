@@ -7,8 +7,19 @@ class HowToPlayScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScaffoldCustom(
+      // appBar: CustomAppBar(
+      //   titleText: "How to Play",
+      // ),
       appBar: CustomAppBar(
         titleText: "How to Play",
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(29.0),
@@ -377,7 +388,6 @@ class HowToPlayScreen extends StatelessWidget {
 
               20.0.heightbox,
 
-              // Heading 4
               Text(
                 'League Table',
                 style: TextStyle(

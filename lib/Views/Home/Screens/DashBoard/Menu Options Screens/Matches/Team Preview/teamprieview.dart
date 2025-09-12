@@ -10,8 +10,8 @@ class TeamPreviewScreen extends StatefulWidget {
 }
 
 class TeamPreviewScreenState extends State<TeamPreviewScreen> {
-  bool isHomeTeam = true; // Toggle between Home and Away teams
-  final String shirtImage = AppImages.shirt; // Shirt asset path
+  bool isHomeTeam = true;
+  final String shirtImage = AppImages.shirt;
 
   // Home Team Data (4-3-3 Formation)
   final List<Map<String, dynamic>> homePlayers = [
@@ -55,8 +55,23 @@ class TeamPreviewScreenState extends State<TeamPreviewScreen> {
     final teamPlayers = isHomeTeam ? homePlayers : awayPlayers;
 
     return ScaffoldCustom(
+      // appBar: CustomAppBar(
+      //   titleText: '$teamTitle Team',
+      //   action: IconButton(
+      //     icon: Icon(Icons.share),
+      //     onPressed: _shareTeam,
+      //   ),
+      // ),
       appBar: CustomAppBar(
-        titleText: '$teamTitle Team',
+        titleText: "$teamTitle Team",
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
+          ],
+        ),
         action: IconButton(
           icon: Icon(Icons.share),
           onPressed: _shareTeam,
@@ -81,7 +96,7 @@ class TeamPreviewScreenState extends State<TeamPreviewScreen> {
                   ),
                   10.0.heightbox,
 
-                  // **Formation UI**
+
                   SizedBox(
                     height: 500,
                     child: Container(
@@ -118,11 +133,10 @@ class TeamPreviewScreenState extends State<TeamPreviewScreen> {
 
             10.0.heightbox,
 
-            // **Navigation Bar with Arrows and Text**
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Left Arrow (Disable if already on Home)
                 IconButton(
                   icon: Icon(
                     Icons.arrow_back_ios,
@@ -138,7 +152,6 @@ class TeamPreviewScreenState extends State<TeamPreviewScreen> {
                         },
                 ),
 
-                // **Home / Away Text in the Center**
                 Text(
                   isHomeTeam ? "Home" : "Away",
                   style: TextStyle(
@@ -148,7 +161,6 @@ class TeamPreviewScreenState extends State<TeamPreviewScreen> {
                   ),
                 ),
 
-                // Right Arrow (Disable if already on Away)
                 IconButton(
                   icon: Icon(
                     Icons.arrow_forward_ios,
@@ -171,7 +183,7 @@ class TeamPreviewScreenState extends State<TeamPreviewScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             10.0.heightbox,
-            // **Match Predictions**
+
             Padding(
               padding: defaultPadding(),
               child: StyledContainer(
@@ -242,7 +254,7 @@ class TeamPreviewScreenState extends State<TeamPreviewScreen> {
           children: [
             Image.asset(
               shirtImage,
-              width: 40, // Adjust size as needed
+              width: 40,
               height: 40,
               fit: BoxFit.contain,
               color: kPrimaryColor.withValues(alpha: .8),

@@ -1,6 +1,27 @@
 import 'package:champion_footballer/Utils/appextensions.dart';
 import 'package:champion_footballer/Utils/packages.dart';
 
+import 'careerstatschart.dart'; 
+
+// Test Screen definition (can be removed or commented out if not used)
+// class MyTestScreen extends StatelessWidget {
+//   const MyTestScreen({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text("Test Screen")),
+//       body: const Center(
+//         child: Text(
+//           "This is a test screen. If you see this, navigation worked!",
+//           style: TextStyle(fontSize: 20),
+//           textAlign: TextAlign.center,
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class PlayerStatsScreen extends StatefulWidget {
   const PlayerStatsScreen({super.key});
 
@@ -14,12 +35,21 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldCustom(
-      appBar: CustomAppBar(titleText: "Career Stats"),
+      appBar: CustomAppBar(
+        titleText: "Career Stats",
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: defaultPadding(vertical: 10),
         child: Column(
           children: [
-            // Dropdowns
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -40,7 +70,6 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
             ),
             10.0.heightbox,
 
-            // Search Bar
             Padding(
               padding: defaultPadding(),
               child: PrimaryTextField(
@@ -50,14 +79,13 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
             ),
             20.0.heightbox,
 
-            // Player Info
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Column(
                   children: [
                     Text(
-                      "Khurram",
+                      "Khurram", // This is hardcoded, will need to be dynamic
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -65,7 +93,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
                       ),
                     ),
                     Text(
-                      "86",
+                      "86", // This is hardcoded, will need to be dynamic
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -75,7 +103,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
                   ],
                 ),
                 Image.asset(
-                  AppImages.user,
+                  AppImages.user, // This is hardcoded, will need to be dynamic
                   color: kPrimaryColor,
                   width: 80,
                   height: 80,
@@ -83,7 +111,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
                 Column(
                   children: [
                     Text(
-                      "Midfielder",
+                      "Midfielder", // This is hardcoded, will need to be dynamic
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -103,14 +131,19 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
                       height: 18,
                       fontSize: 10,
                       borderRadius: 3,
-                    )
+                      onPressFunction: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => PerformanceDashboard()),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ],
             ),
             20.0.heightbox,
 
-            // Current League Stats
+
             StyledContainer(
               width: context.width,
               padding: defaultPadding(vertical: 10, horizontal: 5),
@@ -173,7 +206,6 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
 
             20.0.heightbox,
 
-            // Accumulative Stats + Trophies
             StyledContainer(
               width: context.width,
               padding: defaultPadding(vertical: 10, horizontal: 5),
