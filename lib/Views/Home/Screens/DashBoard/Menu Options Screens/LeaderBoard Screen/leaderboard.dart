@@ -23,7 +23,6 @@ class LeaderBoardScreen extends ConsumerWidget {
                 final current = ref.read(selectedLeagueProvider);
                 if (current == null) {
                   ref.read(selectedLeagueProvider.notifier).state = leagues.first;
-                  // Also reset the metric to default when a league is auto-selected
                   ref.read(selectedLeaderboardMetricProvider.notifier).state = leaderboardMetrics.first.key;
                 }
               } catch (_) {
@@ -80,7 +79,7 @@ class LeaderBoardScreen extends ConsumerWidget {
                             backgroundColor: Colors.white,
                             builder: (context) {
                               return Consumer(builder: (context, ref, _) {
-                                final userAsyncModal = ref.watch(userDataProvider); // Use a different name to avoid conflict
+                                final userAsyncModal = ref.watch(userDataProvider);
                                 return userAsyncModal.when(
                                   data: (user) {
                                     final leagues = user.leagues ?? [];

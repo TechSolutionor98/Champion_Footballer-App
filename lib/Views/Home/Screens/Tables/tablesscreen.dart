@@ -484,7 +484,17 @@ class TableScreen extends ConsumerWidget {
       );
 
       return ScaffoldCustom(
-        appBar: CustomAppBar(titleText: "Table"),
+        appBar: CustomAppBar(
+          titleText: "Table",
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(229, 106, 22, 1),
+              Color.fromRGBO(207, 35, 38, 1),
+            ],
+          ),
+        ),
         body: Center(child: Text("Select a league to view table")),
       );
     }

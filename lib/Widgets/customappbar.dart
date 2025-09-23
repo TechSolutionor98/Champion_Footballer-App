@@ -40,9 +40,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         leading: showLeading
             ? GestureDetector(
                 onTap: () {
-                  Navigator.pop(context);
+                  // Ensure context is valid before popping.
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
                 },
-                child: Center(
+                behavior: HitTestBehavior.opaque, // Increase hit test area
+                child: Container( // Wrapper to increase tappable area
+                  width: 48, 
+                  height: 48,
+                  alignment: Alignment.center,
                   child: Image.asset(
                     "assets/images/backarrow.png",
                     width: 15,
@@ -55,13 +62,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         actions: [
           if (action != null)
             Padding(
-              padding: const EdgeInsets.only(right: 15, bottom: 20),
+              padding: const EdgeInsets.only(right: 15, bottom: 20), // Consider centering this vertically or ensuring consistent tap area too
               child: GestureDetector(
                 onTap: tapaction,
-                child: SizedBox(
-                  width: 25,
-                  height: 25,
-                  child: action,
+                behavior: HitTestBehavior.opaque, // Also good for actions
+                child: SizedBox( // Ensure action has a decent tap area if it's small
+                  width: 40, // Example, adjust as needed
+                  height: 40, // Example, adjust as needed
+                  child: Center(child: action),
                 ),
               ),
             ),

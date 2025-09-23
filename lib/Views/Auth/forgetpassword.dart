@@ -140,6 +140,7 @@ class _ForgotPasswordScreenState
         : false;
 
     return ScaffoldCustom(
+      backgroundImageAsset: AppImages.authBackground,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -149,12 +150,6 @@ class _ForgotPasswordScreenState
               50.0.heightbox,
               Container(
                 padding: defaultPadding(vertical: 10),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: kPrimaryColor,
-                      width: 2,
-                    )),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -174,8 +169,8 @@ class _ForgotPasswordScreenState
                     ),
                     15.0.heightbox,
                     PrimaryTextField(
-                      hintText: "youremail@gmail.com",
-                      labelText: "Email",
+                      hintText: "Email address",
+                      height: 50,
                       controller: emailController,
                     ),
                     20.0.heightbox,
@@ -183,6 +178,7 @@ class _ForgotPasswordScreenState
                         ? const Center(child: CircularProgressIndicator())
                         : PrimaryButton(
                             buttonText: "Send Reset Link",
+                            height: 50,
                             onPressFunction: _submit,
                           ),
                     20.0.heightbox,

@@ -213,7 +213,7 @@ class PrimaryTextField extends StatelessWidget {
               hintText: hintText,
               hintStyle: TextStyle(
                   color: ktexthintColor.withValues(alpha: .6),
-                  fontSize: hintfontSize ?? 12,
+                  fontSize: hintfontSize ?? 13,
                   fontWeight: FontWeight.w600),
               border: InputBorder.none,
               isDense: true,

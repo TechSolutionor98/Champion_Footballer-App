@@ -76,7 +76,7 @@ class GenderSelectionButton extends StatelessWidget {
                         height: 8,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: kPrimaryColor,
+                          color: Color(0xFFF57C00),
                         ),
                       ),
                     )
@@ -86,7 +86,7 @@ class GenderSelectionButton extends StatelessWidget {
             Text(
               gender,
               style: TextStyle(
-                color: ktextColor,
+                color: Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),

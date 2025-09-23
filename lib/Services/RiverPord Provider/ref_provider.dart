@@ -35,9 +35,13 @@ final signupProvider = FutureProvider.family
 });
 
 final authCheckProvider = FutureProvider<bool>((ref) async {
+  print("[authCheckProvider] Evaluating auth status..."); 
   final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
-  return token != null && token.isNotEmpty;
+  final tokenInProvider = prefs.getString('auth_token');
+  print("[authCheckProvider] Token found in SharedPreferences by provider: '$tokenInProvider'"); 
+  final isLoggedIn = tokenInProvider != null && tokenInProvider.isNotEmpty;
+  print("[authCheckProvider] Provider determined isLoggedIn: $isLoggedIn"); 
+  return isLoggedIn;
 });
 
 final userDataProvider = FutureProvider<WelcomeUser>((ref) async {
@@ -325,42 +329,73 @@ final matchDetailProvider =
 });
 
 final createLeagueProvider =
-    FutureProvider.family<void, CreateLeagueRequest>((ref, request) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token') ?? '';
+    FutureProvider.family<LeaguesJoined, CreateLeagueRequest>( // MODIFIED: Return type
+  (ref, request) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token') ?? '';
 
-  final uri = Uri.parse('https://api.techmanagement.tech/leagues');
-  final multipartRequest = http.MultipartRequest('POST', uri)
-    ..headers['Authorization'] = 'Bearer $token'
-    ..fields['name'] = request.name;
+    final uri = Uri.parse('https://api.techmanagement.tech/leagues');
+    final multipartRequest = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..fields['name'] = request.name;
 
-  if (request.image != null && request.image!.isNotEmpty) {
-    final file = File(request.image!);
-    if (!file.existsSync() || file.lengthSync() == 0) {
-      throw Exception('Image file invalid: ${request.image}');
+    if (request.image != null && request.image!.isNotEmpty) {
+      final file = File(request.image!);
+      if (!file.existsSync() || file.lengthSync() == 0) {
+        throw Exception('Image file invalid or empty: ${request.image}');
+      }
+      final mimeType =
+          lookupMimeType(request.image!) ?? 'application/octet-stream';
+      final mimeParts = mimeType.split('/');
+      multipartRequest.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          request.image!,
+          contentType: MediaType(mimeParts[0], mimeParts[1]),
+        ),
+      );
     }
-    final mimeType =
-        lookupMimeType(request.image!) ?? 'application/octet-stream';
-    final mimeParts = mimeType.split('/');
-    multipartRequest.files.add(
-      await http.MultipartFile.fromPath(
-        'image',
-        request.image!,
-        contentType: MediaType(mimeParts[0], mimeParts[1]),
-      ),
-    );
-  }
-  print('Fields: ${multipartRequest.fields}');
-  print(
-      'Files: ${multipartRequest.files.map((f) => "${f.field}:${f.filename}")}');
-  final streamedResponse = await multipartRequest.send();
-  final response = await http.Response.fromStream(streamedResponse);
-  print('Status: ${response.statusCode}');
-  print('Body: ${response.body}');
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw Exception('Server error ${response.statusCode}: ${response.body}');
-  }
-});
+    print('Fields: ${multipartRequest.fields}');
+    print(
+        'Files: ${multipartRequest.files.map((f) => "${f.field}:${f.filename}")}');
+
+    final streamedResponse = await multipartRequest.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    print('Status: ${response.statusCode}');
+    print('Body: ${response.body}');
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final responseBody = jsonDecode(response.body);
+      // API response includes: {"success":true,"message":"...","league":{...}}
+      if (responseBody['success'] == true && responseBody['league'] != null) {
+        // MODIFIED: Parse and return the league object
+        return LeaguesJoined.fromJson(responseBody['league'] as Map<String, dynamic>);
+      } else {
+        // Handle cases where 'success' is false or 'league' is missing from a 2xx response
+        throw Exception(
+            responseBody['message'] ?? 'League creation succeeded but API response format is unexpected.');
+      }
+    } else {
+      // Handle server errors (non-2xx responses)
+      String errorMessage = 'Server error ${response.statusCode}';
+      try {
+        final decodedBody = jsonDecode(response.body);
+        if (decodedBody is Map && decodedBody.containsKey('message')) {
+          errorMessage = decodedBody['message'];
+        } else if (response.body.isNotEmpty) {
+          errorMessage = response.body;
+        }
+      } catch (e) {
+        // Fallback if error body isn't JSON or doesn't have 'message'
+        if (response.body.isNotEmpty) {
+          errorMessage = response.body;
+        }
+      }
+      throw Exception(errorMessage);
+    }
+  },
+);
 
 final joinLeagueProvider = FutureProvider.family
     .autoDispose<bool, JoinLeagueRequest>((ref, request) async {
@@ -546,6 +581,9 @@ Future<Map<String, dynamic>> getMatchById(
   });
   print("GET $url");
   print("Response: ${response.statusCode} -> ${response.body}");
+  print("DEBUG getMatchById API URL for $matchId: $url");
+  print("DEBUG getMatchById API Status for $matchId: ${response.statusCode}");
+  print("DEBUG getMatchById API Body for $matchId: ${response.body}");
   if (response.statusCode == 200) {
     return jsonDecode(response.body) as Map<String, dynamic>;
   } else {
@@ -553,6 +591,15 @@ Future<Map<String, dynamic>> getMatchById(
         "Failed to fetch match: ${response.statusCode} ${response.body}");
   }
 }
+
+final detailedMatchProvider = FutureProvider.family<Match, ({String leagueId, String matchId})>(
+        (ref, ids) async {
+      // Calling the existing getMatchById function from your file
+      final matchDataMap = await getMatchById(ids.matchId, ids.leagueId);
+      // MODIFIED LINE: Ensure we pass the nested 'match' object and cast it.
+      return Match.fromJson(matchDataMap['match'] as Map<String, dynamic>);
+    }
+);
 
 Future<void> updateMatchNote({
   required String matchId,
@@ -613,31 +660,14 @@ Future<void> updateLeagueSettings({
   if (maxGames != null) requestBody['maxGames'] = maxGames;
   if (showPoints != null) requestBody['showPoints'] = showPoints;
 
-  // CORRECTED PART for "admins"
   if (administratorIds != null && administratorIds.isNotEmpty) {
     requestBody['admins'] =
-        administratorIds; // Key is 'admins', value is List<String>
+        administratorIds;
   }
-  // END OF CORRECTED PART
 
   if (requestBody.isEmpty &&
       !(administratorIds != null && administratorIds.isNotEmpty)) {
-    // Added check for administratorIds to ensure we don't return if only admins are being changed
-    // If only admins were changed, requestBody might be empty but we still want to proceed if administratorIds were provided.
-    // However, the current logic sends the request if requestBody is not empty OR if adminIds were present.
-    // The check for requestBody.isEmpty should be sufficient if we ensure 'admins' is part of it.
-    // Let's refine the condition for returning early:
-    // if all potential fields including 'admins' would result in an empty body, then return.
-    // For now, if administratorIds were provided, we assume a change is intended.
-    // A more robust check might be: if (requestBody.keys.length == 1 && requestBody.containsKey('admins') && requestBody['admins'].isEmpty) return; // or similar
-    // But given the logic, if administratorIds is not null and not empty, 'admins' key WILL be added.
-    // So if requestBody is empty here, it means no other fields were changed.
-    // If 'admins' was the *only* change, requestBody would contain only 'admins'.
-    // Let's adjust the early return logic slightly:
     if (requestBody.isEmpty) {
-      // This means name, active, maxGames, showPoints were all null or empty.
-      // If administratorIds was also null or empty, then truly nothing to send.
-      // If administratorIds HAD values, 'admins' would be in requestBody, so it wouldn't be empty.
       print(
           "[updateLeagueSettings] Request body is empty, nothing to update for leagueId: $leagueId.");
       return;
@@ -709,8 +739,6 @@ Future<void> deleteLeague({
 
   print(
       "[deleteLeague] DELETE response for league $leagueId: ${response.statusCode}, ${response.body}");
-
-  // Typical success codes for DELETE are 200 (OK with content), 202 (Accepted), or 204 (No Content).
   if (response.statusCode == 200 ||
       response.statusCode == 202 ||
       response.statusCode == 204) {
@@ -762,10 +790,7 @@ Future<void> leaveLeague({
     Uri.parse('https://api.techmanagement.tech/leagues/$leagueId/leave'),
     headers: {
       'Authorization': 'Bearer $token',
-      // 'Content-Type': 'application/json', // POST usually has a body, but this endpoint might not require one.
-      // If the API expects an empty JSON body, uncomment and add 'body: jsonEncode({})'
     },
-    // body: jsonEncode({}), // If your API expects an empty JSON body for this POST request
   );
 
   print(
@@ -773,11 +798,10 @@ Future<void> leaveLeague({
 
   if (response.statusCode == 200 || response.statusCode == 201) {
     print("[leaveLeague] Successfully left league $leagueId.");
-    ref.invalidate(userDataProvider); // Refresh user's league list
+    ref.invalidate(userDataProvider);
     ref.invalidate(leagueSettingsProvider(
-        leagueId)); // Invalidate settings for the league left
+        leagueId));
 
-    // Clear the selected league if it was the one left
     if (ref.read(selectedLeagueProvider)?.id == leagueId) {
       ref.read(selectedLeagueProvider.notifier).state = null;
     }
@@ -793,7 +817,6 @@ Future<void> leaveLeague({
         errorMessage = "Status: ${response.statusCode}";
       }
     } catch (_) {
-      // If response body is not JSON or empty
       errorMessage = response.body.isNotEmpty
           ? response.body
           : "Status: ${response.statusCode}";
@@ -841,8 +864,6 @@ final leaderboardDataProvider = FutureProvider.autoDispose.family<List<ApiLeader
   },
 );
 
-// --- START: Added for Leaderboard Metrics ---
-// Metric Data Structure
 class Metric {
   final String key;
   final String label;
@@ -851,7 +872,6 @@ class Metric {
   Metric({required this.key, required this.label, required this.iconAssetPath});
 }
 
-// Metric list
 final List<Metric> leaderboardMetrics = [
   Metric(key: 'goals', label: 'Goals', iconAssetPath: "assets/icons/goals.png"),
   Metric(key: 'assists', label: 'Assists', iconAssetPath: "assets/icons/assist.png"),
@@ -861,8 +881,6 @@ final List<Metric> leaderboardMetrics = [
   Metric(key: 'cleanSheet', label: 'Clean Sheet', iconAssetPath: "assets/icons/cleansheet.png"),
 ];
 
-// Selected Metric Provider
 final selectedLeaderboardMetricProvider = StateProvider<String>((ref) {
   return leaderboardMetrics.first.key;
 });
-// --- END: Added for Leaderboard Metrics ---

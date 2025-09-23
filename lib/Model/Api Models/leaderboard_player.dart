@@ -2,9 +2,9 @@ class ApiLeaderboardPlayer {
   final String id;
   final String name;
   final String? positionType;
-  final String? profilePicture; // This is a URL from your API response
+  final String? profilePicture;
   final String? shirtNumber;
-  final String value; // Value from API is a String like "5"
+  final String value;
 
   ApiLeaderboardPlayer({
     required this.id,

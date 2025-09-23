@@ -12,7 +12,7 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-  bool? isLoggedIn; // null = loading
+  bool? isLoggedIn;
 
   @override
   void initState() {

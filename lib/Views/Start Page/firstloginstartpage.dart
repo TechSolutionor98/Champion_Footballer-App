@@ -388,7 +388,6 @@ class StartPage extends ConsumerWidget {
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
-                                        //add a container as divider here
                                         Container(
                                           width: 25,
                                           height: 1,

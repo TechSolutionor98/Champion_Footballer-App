@@ -122,7 +122,7 @@ class PlayerListScreen extends ConsumerWidget {
                       if (player.profilePicture != null && player.profilePicture!.isNotEmpty) {
                         avatarImage = NetworkImage(player.profilePicture!);
                       } else {
-                        avatarImage = AssetImage(AppImages.profilepic); // Fallback image
+                        avatarImage = AssetImage(AppImages.profilepic);
                       }
 
                       return Row(

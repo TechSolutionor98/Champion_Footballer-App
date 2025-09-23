@@ -131,7 +131,7 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
                 15.0.heightbox,
                 PrimaryTextField(
                   bordercolor: kPrimaryColor.withValues(alpha: .5),
-                  hintText: 'write your messegae here..',
+                  hintText: 'write your message here..',
                   labelText: "Your Message",
                   controller: messageController,
                   // maxLines: 5,

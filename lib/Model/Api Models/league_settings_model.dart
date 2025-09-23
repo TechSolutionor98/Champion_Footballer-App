@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'usermodel.dart';
 
 LeagueSettingsResponse leagueSettingsResponseFromJson(String str) => LeagueSettingsResponse.fromJson(json.decode(str));
 String leagueSettingsResponseToJson(LeagueSettingsResponse data) => json.encode(data.toJson());
@@ -32,6 +33,7 @@ class LeagueDetails {
     bool? showPoints;
     List<LeagueAdminInfo>? administrators;
     List<LeagueMemberInfo>? members;
+    List<Match>? matches; 
 
     LeagueDetails({
         this.id,
@@ -42,6 +44,7 @@ class LeagueDetails {
         this.showPoints,
         this.administrators,
         this.members,
+        this.matches, 
     });
 
     factory LeagueDetails.fromJson(Map<String, dynamic> json) => LeagueDetails(
@@ -57,6 +60,9 @@ class LeagueDetails {
         members: json["members"] == null 
             ? [] 
             : List<LeagueMemberInfo>.from(json["members"].map((x) => LeagueMemberInfo.fromJson(x))),
+        matches: json["matches"] == null 
+            ? [] 
+            : List<Match>.from(json["matches"].map((x) => Match.fromJson(x))), 
     );
 
     Map<String, dynamic> toJson() => {
@@ -68,6 +74,7 @@ class LeagueDetails {
         "showPoints": showPoints,
         "administrators": administrators == null ? [] : List<dynamic>.from(administrators!.map((x) => x.toJson())),
         "members": members == null ? [] : List<dynamic>.from(members!.map((x) => x.toJson())),
+        "matches": matches == null ? [] : List<dynamic>.from(matches!.map((x) => x.toJson())), 
     };
 }
 

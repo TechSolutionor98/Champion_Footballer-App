@@ -1,11 +1,9 @@
-import 'dart:convert'; // For jsonDecode
 import 'package:champion_footballer/Model/Api%20Models/usermodel.dart';
 import 'package:champion_footballer/Services/RiverPord%20Provider/ref_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:champion_footballer/Utils/appextensions.dart';
 import '../../../../Utils/packages.dart';
 
-// Providers for loading/error states
 final addStatsLeagueLoadingProvider = StateProvider<bool>((ref) => true);
 final addStatsLeagueErrorProvider = StateProvider<String?>((ref) => null);
 
@@ -189,7 +187,7 @@ class _AddStatsScreenState extends ConsumerState<AddStatsScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                       ),
-                      backgroundColor: Colors.white, // Modal background
+                      backgroundColor: Colors.white,
                       builder: (context) {
                         return Container(
                           padding: EdgeInsets.all(16),

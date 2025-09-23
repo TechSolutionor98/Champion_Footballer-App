@@ -85,7 +85,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
                 Column(
                   children: [
                     Text(
-                      "Khurram", // This is hardcoded, will need to be dynamic
+                      "Khurram",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -93,7 +93,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
                       ),
                     ),
                     Text(
-                      "86", // This is hardcoded, will need to be dynamic
+                      "86",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -103,7 +103,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
                   ],
                 ),
                 Image.asset(
-                  AppImages.user, // This is hardcoded, will need to be dynamic
+                  AppImages.user,
                   color: kPrimaryColor,
                   width: 80,
                   height: 80,
@@ -111,7 +111,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
                 Column(
                   children: [
                     Text(
-                      "Midfielder", // This is hardcoded, will need to be dynamic
+                      "Midfielder",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

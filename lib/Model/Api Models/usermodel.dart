@@ -49,7 +49,8 @@ class UserModel {
 To parse this JSON data, do*/
 
 
-import 'dart:ui';
+
+import 'dart:convert';
 
 class Welcome {
   WelcomeUser? user;
@@ -73,7 +74,7 @@ class WelcomeUser {
   String? firstName;
   String? lastName;
   String? displayName;
-  String? positionType; // Added for position type
+  String? positionType;
   String? position;
   int? xp;
   PreferredFoot? preferredFoot;
@@ -83,8 +84,8 @@ class WelcomeUser {
   int? age;
   String? ipAddress;
   String? gender;
-  String? pictureKey; // This seems to be the one taking json["profilePicture"] in WelcomeUser.fromJson
-  String? profilePictureUrl; // Explicitly adding for clarity if needed, though pictureKey might be it.
+  String? pictureKey;
+  String? profilePictureUrl;
   dynamic matchGuestForId;
   DateTime? createdAt;
   DateTime? updatedAt;
@@ -97,7 +98,7 @@ class WelcomeUser {
     this.firstName,
     this.lastName,
     this.displayName,
-    this.positionType, // Added to constructor
+    this.positionType,
     this.position,
     this.xp,
     this.preferredFoot,
@@ -122,7 +123,7 @@ class WelcomeUser {
     firstName: json["firstName"],
     lastName: json["lastName"],
     displayName: json["displayName"],
-    positionType: json["positionType"], // Mapped from JSON
+    positionType: json["positionType"],
     position: json["position"],
     preferredFoot: preferredFootValues.map[json["preferredFoot"]],
     chemistryStyle: json["chemistryStyle"],
@@ -134,8 +135,8 @@ class WelcomeUser {
     xp: json["xp"],
     ipAddress: json["ipAddress"],
     gender: json["gender"],
-    pictureKey: json["profilePicture"], // In WelcomeUser, json["profilePicture"] maps to pictureKey.
-    profilePictureUrl: json["profilePicture"], // Explicitly map to new field as well
+    pictureKey: json["profilePicture"],
+    profilePictureUrl: json["profilePicture"],
     matchGuestForId: json["matchGuestForId"],
     createdAt: json["createdAt"] == null
         ? null
@@ -160,7 +161,7 @@ class WelcomeUser {
         "firstName": firstName,
         "lastName": lastName,
         "displayName": displayName,
-        "positionType": positionType, // Added to JSON serialization
+        "positionType": positionType,
         "position": position,
         "preferredFoot": preferredFootValues.reverse[preferredFoot],
         "chemistryStyle": chemistryStyle,
@@ -169,7 +170,6 @@ class WelcomeUser {
         "age": age,
         "ipAddress": ipAddress,
         "gender": gender,
-        // If pictureKey was intended to hold the URL, use it. Otherwise, use profilePictureUrl.
         "profilePicture": profilePictureUrl ?? pictureKey, 
         "matchGuestForId": matchGuestForId,
         "createdAt": createdAt?.toIso8601String(),
@@ -250,37 +250,40 @@ class LeaguesJoined {
     this.members,
   });
 
-  factory LeaguesJoined.fromJson(Map<String, dynamic> json) => LeaguesJoined(
-    id: json["id"],
-    name: json["name"],
-    active: json["active"],
-    inviteCode: json["inviteCode"],
-    maxGames: json["maxGames"],
-    showPoints: json["showPoints"],
-    image: json["image"],
-    createdAt: json["createdAt"] == null
-        ? null
-        : DateTime.parse(json["createdAt"]),
-    updatedAt: json["updatedAt"] == null
-        ? null
-        : DateTime.parse(json["updatedAt"]),
-    admins: json["admins"] == null
-        ? []
-        : List<Admin>.from(
-        json["admins"]!.map((x) => Admin.fromJson(x))),
-    matches: json["matches"] == null
-        ? []
-        : List<Match>.from(
-        json["matches"]!.map((x) => Match.fromJson(x))),
-    users: json["users"] == null
-        ? []
-        : List<UserElement>.from(
-        json["users"]!.map((x) => UserElement.fromJson(x))),
-    members: json["members"] == null
-        ? []
-        : List<UserElement>.from(
-        json["members"]!.map((x) => UserElement.fromJson(x))),
-  );
+  factory LeaguesJoined.fromJson(Map<String, dynamic> json) {
+    print("DEBUG LeaguesJoined.fromJson for league ID ${json["id"]}: Raw matches data: ${jsonEncode(json["matches"])}");
+    return LeaguesJoined(
+      id: json["id"],
+      name: json["name"],
+      active: json["active"],
+      inviteCode: json["inviteCode"],
+      maxGames: json["maxGames"],
+      showPoints: json["showPoints"],
+      image: json["image"],
+      createdAt: json["createdAt"] == null
+          ? null
+          : DateTime.parse(json["createdAt"]),
+      updatedAt: json["updatedAt"] == null
+          ? null
+          : DateTime.parse(json["updatedAt"]),
+      admins: json["admins"] == null
+          ? []
+          : List<Admin>.from(
+          json["admins"]!.map((x) => Admin.fromJson(x))),
+      matches: json["matches"] == null
+          ? []
+          : List<Match>.from(
+          json["matches"]!.map((x) => Match.fromJson(x as Map<String,dynamic>))),
+      users: json["users"] == null
+          ? []
+          : List<UserElement>.from(
+          json["users"]!.map((x) => UserElement.fromJson(x))),
+      members: json["members"] == null
+          ? []
+          : List<UserElement>.from(
+          json["members"]!.map((x) => UserElement.fromJson(x))),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,
@@ -664,6 +667,11 @@ class Match {
   });
 
   factory Match.fromJson(Map<String, dynamic> json) {
+    print("DEBUG Match.fromJson (usermodel.dart) called. Received JSON: ${jsonEncode(json)}");
+    print("  json['date']: ${json["date"]} (type: ${json["date"]?.runtimeType})");
+    print("  json['start']: ${json["start"]} (type: ${json["start"]?.runtimeType})");
+    print("  json['end']: ${json["end"]} (type: ${json["end"]?.runtimeType})");
+    print("  json['status']: ${json["status"]} (type: ${json["status"]?.runtimeType})");
     return Match(
       id: json["id"],
       date: _parseDateTime(json["date"]),
@@ -687,23 +695,23 @@ class Match {
       availableUsers: json["availableUsers"] == null
           ? []
           : List<UserElement>.from(
-          json["availableUsers"]!.map((x) => UserElement.fromJson(x))),
+          json["availableUsers"]!.map((x) => UserElement.fromJson(x as Map<String,dynamic>))),
       homeTeamUsers: json["homeTeamUsers"] == null
           ? []
           : List<UserElement>.from(
-          json["homeTeamUsers"]!.map((x) => UserElement.fromJson(x))),
+          json["homeTeamUsers"]!.map((x) => UserElement.fromJson(x as Map<String,dynamic>))),
       awayTeamUsers: json["awayTeamUsers"] == null
           ? []
           : List<UserElement>.from(
-          json["awayTeamUsers"]!.map((x) => UserElement.fromJson(x))),
+          json["awayTeamUsers"]!.map((x) => UserElement.fromJson(x as Map<String,dynamic>))),
       statistics: json["statistics"] == null
           ? []
           : List<Statistic>.from(
-          json["statistics"]!.map((x) => Statistic.fromJson(x))),
+          json["statistics"]!.map((x) => Statistic.fromJson(x as Map<String,dynamic>))),
       votes: json["votes"] == null
           ? []
           : List<Vote>.from(
-          json["votes"]!.map((x) => Vote.fromJson(x))),
+          json["votes"]!.map((x) => Vote.fromJson(x as Map<String,dynamic>))),
     );
   }
 
@@ -743,6 +751,16 @@ class Match {
         ? []
         : List<dynamic>.from(votes!.map((x) => x.toJson())),
   };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Match &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /*class Match {
@@ -865,7 +883,7 @@ class Match {
       case 'completed':
         return MatchStatus.completed;
       case 'cancelled':
-        return MatchStatus.cancelled;
+        return Match_Status.cancelled;
       default:
         return null;
     }
@@ -887,7 +905,7 @@ class Match {
   }
 }
 
-enum MatchStatus {
+enum Match_Status {
   scheduled,
   inProgress,
   completed,
@@ -928,8 +946,8 @@ class UserElement {
   String? chemistryStyle;
   String? shirtNumber;
   AwayTeamUserAttributes? attributes;
-  PictureKey? pictureKey; // Existing enum for picture key
-  String? profilePicture; // New field for the profile picture URL string
+  PictureKey? pictureKey;
+  String? profilePicture;
   String? password;
   String? matchGuestForId;
   DateTime? createdAt;
@@ -948,7 +966,7 @@ class UserElement {
     this.shirtNumber,
     this.attributes,
     this.pictureKey,
-    this.profilePicture, // Added to constructor
+    this.profilePicture,
     this.password,
     this.matchGuestForId,
     this.createdAt,
@@ -969,7 +987,7 @@ class UserElement {
             ? null
             : AwayTeamUserAttributes.fromJson(json["attributes"]),
         pictureKey: pictureKeyValues.map[json["pictureKey"]],
-        profilePicture: json["profilePicture"] as String?, // Mapped from JSON
+        profilePicture: json["profilePicture"] as String?,
         password: json["password"],
         matchGuestForId: json["matchGuestForId"],
         createdAt: json["createdAt"] == null
@@ -981,7 +999,7 @@ class UserElement {
         matchStatistics: json["matchStatistics"] == null
             ? []
             : List<Statistic>.from(
-                json["matchStatistics"]!.map((x) => Statistic.fromJson(x))),
+                json["matchStatistics"]!.map((x) => Statistic.fromJson(x as Map<String,dynamic>))),
       );
 
   Map<String, dynamic> toJson() => {
@@ -995,7 +1013,7 @@ class UserElement {
         "shirtNumber": shirtNumber,
         "attributes": attributes?.toJson(),
         "pictureKey": pictureKeyValues.reverse[pictureKey],
-        "profilePicture": profilePicture, // Added to JSON serialization
+        "profilePicture": profilePicture,
         "password": password,
         "matchGuestForId": matchGuestForId,
         "createdAt": createdAt?.toIso8601String(),

@@ -756,8 +756,8 @@ class MatchesScreen extends ConsumerWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color.fromRGBO(229, 106, 22, 1), // orange
-            Color.fromRGBO(207, 35, 38, 1),  // red
+            Color.fromRGBO(229, 106, 22, 1),
+            Color.fromRGBO(207, 35, 38, 1),
           ],
         ),
       ),

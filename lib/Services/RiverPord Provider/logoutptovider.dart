@@ -133,7 +133,7 @@ class LogoutController {
 
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const SplashScreen()),
+          MaterialPageRoute(builder: (context) => const AuthScreen()),
               (Route<dynamic> route) => false,
         );
         print("[LogoutController] Navigated to SplashScreen.");

@@ -14,7 +14,6 @@ class PerformanceDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title
             const Center(
               child: Text(
                 "Khurram Performance Dashboard",
@@ -25,8 +24,6 @@ class PerformanceDashboard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Performance Over Time
             Card(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 2,
@@ -124,10 +121,8 @@ class PerformanceDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Influence + Win/Loss charts
             Row(
               children: [
-                // Custom Radar Chart
                 Expanded(
                   child: Card(
                     child: SizedBox(
@@ -209,8 +204,6 @@ class PerformanceDashboard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-
-            // Impact Section
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -330,7 +323,6 @@ class PerformanceDashboard extends StatelessWidget {
               ),
             ),
 
-            // 🔹 Your Top Strength Section
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -348,9 +340,9 @@ class PerformanceDashboard extends StatelessWidget {
                         horizontalInside: BorderSide(width: 1, color: Colors.black),
                       ),
                       columnWidths: const {
-                        0: FlexColumnWidth(2),   // Metric
-                        1: FlexColumnWidth(1),   // You
-                        2: FlexColumnWidth(2),   // Against Top 25% (+diff + arrow)
+                        0: FlexColumnWidth(2),
+                        1: FlexColumnWidth(1),
+                        2: FlexColumnWidth(2),
                       },
                       children: [
                         // Header row
@@ -401,7 +393,6 @@ class PerformanceDashboard extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-// 🔹 Focus Area Section
             Card(
               color: Colors.white,
               child: Padding(
@@ -428,9 +419,6 @@ class PerformanceDashboard extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-
-
-            // Play Best With + Rivalries (shirt inline with name)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -499,8 +487,6 @@ class PerformanceDashboard extends StatelessWidget {
     );
   }
 }
-
-// -------------------- Helper --------------------
 
 TableRow _buildImpactRow(
     String title, String value, String change, bool up) {
@@ -585,9 +571,6 @@ TableRow _buildStrengthRow(
 }
 
 
-
-// -------------------- Radar Chart --------------------
-
 class SimpleRadarChart extends StatelessWidget {
   final List<String> features;
   final List<List<double>> data;
@@ -648,7 +631,7 @@ class RadarChartPainter extends CustomPainter {
       ..strokeWidth = 1
       ..color = Colors.grey.withOpacity(0.25);
 
-    // concentric polygons
+
     for (int i = 0; i < ticks.length; i++) {
       double t = ticks[i] / maxTick;
       Path p = Path();
@@ -719,7 +702,6 @@ class RadarChartPainter extends CustomPainter {
       }
     }
 
-    // feature labels
     for (int k = 0; k < n; k++) {
       final double angle = -math.pi / 2 + 2 * math.pi * k / n;
       final double x = center.dx + (radius + 18) * math.cos(angle);
@@ -800,5 +782,5 @@ final List<RadarData> leagueAvgData = [
 final List<PieData> winLossData = [
   PieData("Win", 45, Colors.green),
   PieData("Loss", 35, Colors.red),
-  PieData("Draw", 20, Colors.orange), // 🔹 Draw added
+  PieData("Draw", 20, Colors.orange),
 ];

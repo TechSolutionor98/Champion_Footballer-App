@@ -28,6 +28,7 @@ class ScaffoldCustom extends StatelessWidget {
   final bool drawerEnableOpenDragGesture;
   final bool endDrawerEnableOpenDragGesture;
   final String? restorationId;
+  final String? backgroundImageAsset; // New field
 
   const ScaffoldCustom({
     super.key,
@@ -56,6 +57,7 @@ class ScaffoldCustom extends StatelessWidget {
     this.drawerEnableOpenDragGesture = true,
     this.endDrawerEnableOpenDragGesture = true,
     this.restorationId,
+    this.backgroundImageAsset, // Added to constructor
   });
 
   @override
@@ -88,7 +90,7 @@ class ScaffoldCustom extends StatelessWidget {
       body: Stack(
         children: [
           Image.asset(
-            AppImages.background,
+            backgroundImageAsset ?? AppImages.background, // Use new field or default
             fit: BoxFit.cover,
             height: double.infinity,
             width: double.infinity,

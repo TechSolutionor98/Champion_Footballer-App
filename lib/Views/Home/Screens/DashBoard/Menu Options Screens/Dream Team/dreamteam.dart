@@ -267,7 +267,6 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
                                     itemCount: leagues.length,
                                     itemBuilder: (context, index) {
                                       final leagueToList = leagues[index];
-                                      // Using global LeagueOptionTile, removed isSelected
                                       return LeagueOptionTile( 
                                         leagueName:
                                         leagueToList.name ?? "Unnamed League",
@@ -423,7 +422,7 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 8,
-        childAspectRatio: 4.5, // Adjusted for better text visibility
+        childAspectRatio: 4.5,
         mainAxisSpacing: 8,
       ),
       itemCount: allPlayers.length,
@@ -433,7 +432,7 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
         return Row( // Using Row for each item
           children: [
             Image.asset(
-              AppImages.shirt, // Assuming AppImages.shirt is defined
+              AppImages.shirt,
               width: 18,
               height: 18,
             ),
@@ -474,5 +473,5 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
   }
 }
 
-// Removed local LeagueOptionTile class definition
+
 

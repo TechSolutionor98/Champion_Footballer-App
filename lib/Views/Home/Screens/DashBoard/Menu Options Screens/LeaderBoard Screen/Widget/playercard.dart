@@ -5,8 +5,8 @@ import '../../../../../../../../Utils/packages.dart';
 class PlayerCard extends StatelessWidget {
   final String name;
   final String position;
-  final String metricLabel; // New: Label for the metric (e.g., "Goals", "Assists")
-  final int metricValue;  // New: Value for the metric
+  final String metricLabel;
+  final int metricValue;
   final String image;
   final bool isNetwork;
 
@@ -25,8 +25,8 @@ class PlayerCard extends StatelessWidget {
     super.key,
     required this.name,
     required this.position,
-    required this.metricLabel, // New
-    required this.metricValue, // New
+    required this.metricLabel,
+    required this.metricValue,
     required this.image,
     this.isNetwork = false,
     this.fontSize = 14,
@@ -102,7 +102,7 @@ class PlayerCard extends StatelessWidget {
               8.0.heightbox,
               _infoRow("Position:", position),
               8.0.heightbox,
-              _infoRow("${metricLabel}:", metricValue.toString()), // Changed to use dynamic label and value
+              _infoRow("${metricLabel}:", metricValue.toString()),
             ],
           ),
         ),

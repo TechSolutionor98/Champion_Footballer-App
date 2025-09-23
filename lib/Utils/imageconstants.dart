@@ -20,6 +20,7 @@ class AppImages {
   static const String backarrow = 'assets/images/backarrow.png';
   static const String forwadarrow = 'assets/icons/forwadarrow.png';
   static const String background = 'assets/images/background.png';
+  static const String authBackground = 'assets/images/auth_background.png'; // Added this line
   static const String teamicon = 'assets/icons/teams.png';
   static const String statsicon = 'assets/icons/stats.png';
   static const String splash = 'assets/images/splash.png';
