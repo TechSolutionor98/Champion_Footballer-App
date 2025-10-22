@@ -57,18 +57,19 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
     if (!mounted) return;
     final currentSelectedLeague = ref.read(selectedLeagueProvider);
     if (currentSelectedLeague == null) {
-      final userData = ref.read(userDataProvider);
-      userData.whenData((user) {
+      final userLeaguesAsync = ref.read(userStatusLeaguesProvider);
+      userLeaguesAsync.whenData((leaguesList) {
         if (!mounted) return;
-        if (user.leagues != null && user.leagues!.isNotEmpty) {
-          ref.read(selectedLeagueProvider.notifier).state = user.leagues!.first;
+        if (leaguesList.isNotEmpty) {
+          // ✅ Changed from .first to .last to select most recently created/joined league
+          ref.read(selectedLeagueProvider.notifier).state = leaguesList.last;
         } else {
           setState(() {
             _isLoading = false;
             _leagueNameDisplay = "No leagues joined";
             _leagueNameController.text = "";
             _maxMatchesController.text = "";
-            _errorMessage = "You haven\'t joined any leagues to see settings.";
+            _errorMessage = "You haven't joined any leagues to see settings.";
           });
         }
       });
@@ -123,7 +124,7 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
   Widget build(BuildContext context) {
     final selectedLeague = ref.watch(selectedLeagueProvider);
     final currentLeagueId = selectedLeague?.id;
-    final userDataAsyncValue = ref.watch(userDataProvider);
+    final userDataAsyncValue = ref.watch(userDataProvider); // Kept for potential other uses
 
     ref.listen<String?>(selectedLeagueProvider.select((s) => s?.id), (previousLeagueId, newLeagueId) {
       if (!mounted) return;
@@ -132,7 +133,7 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
           _isLoading = true;
           _errorMessage = null;
           _leagueNameController.text = "Loading...";
-          _maxMatchesController.text = ""; 
+          _maxMatchesController.text = "";
           _leagueNameDisplay = "Loading League...";
           _inviteCodeDisplay = "N/A";
           _selectedAdminId = null;
@@ -142,9 +143,9 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
       }
       else if (newLeagueId == null && previousLeagueId != null) {
         setState(() {
-           _isLoading = true; 
+           _isLoading = true;
            _errorMessage = null;
-           _leagueNameController.text = "Loading..."; 
+           _leagueNameController.text = "Loading...";
            _maxMatchesController.text = "";
            _leagueNameDisplay = "Loading League...";
            _inviteCodeDisplay = "N/A";
@@ -157,7 +158,7 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
 
     if (currentLeagueId == null && !userDataAsyncValue.isLoading && !userDataAsyncValue.hasError) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-         if (mounted && _isLoading) { 
+         if (mounted && _isLoading) {
             _initializeLeagueSelection();
          }
       });
@@ -167,7 +168,7 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
       final leagueSettingsData = ref.watch(leagueSettingsProvider(currentLeagueId));
       leagueSettingsData.when(
         data: (details) {
-          if (details != null && _isLoading) { 
+          if (details != null && _isLoading) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 _updateStateWithApiData(details);
@@ -194,7 +195,7 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
           }
         },
         error: (err, stack) {
-           if (mounted && _isLoading) { 
+           if (mounted && _isLoading) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 setState(() {
@@ -206,28 +207,50 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
           }
         },
       );
-    } else if (userDataAsyncValue.isLoading && !_isLoading) {
-         WidgetsBinding.instance.addPostFrameCallback((_) {
-            if(mounted && !_isLoading){ setState(() { _isLoading = true; _errorMessage = null; });}
-        });
-    } else if (!userDataAsyncValue.isLoading && !userDataAsyncValue.hasError &&
-               (userDataAsyncValue.value?.leagues == null || userDataAsyncValue.value!.leagues!.isEmpty)){
-         WidgetsBinding.instance.addPostFrameCallback((_) {
-            if(mounted && _isLoading){ 
-                setState(() {
-                    _isLoading = false;
-                    _leagueNameDisplay = "No leagues joined";
-                    _leagueNameController.text = "";
-                    _maxMatchesController.text = "";
-                    _errorMessage = "Please join or create a league to manage settings.";
-                     _inviteCodeDisplay = "N/A";
-                    _selectedAdminId = null;
-                    _membersForAdminSelectionDropdown = [];
-                    _leaguePlayersDisplayList = [];
+    } else {
+        final userLeaguesAsync = ref.watch(userStatusLeaguesProvider);
+        userLeaguesAsync.when(
+            data: (leaguesList) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && _isLoading) {
+                        if (leaguesList.isEmpty) {
+                             setState(() {
+                                _isLoading = false;
+                                _leagueNameDisplay = "No leagues joined";
+                                _leagueNameController.text = "";
+                                _maxMatchesController.text = "";
+                                _errorMessage = "Please join or create a league to manage settings.";
+                                _inviteCodeDisplay = "N/A";
+                                _selectedAdminId = null;
+                                _membersForAdminSelectionDropdown = [];
+                                _leaguePlayersDisplayList = [];
+                            });
+                        } else if (ref.read(selectedLeagueProvider) == null) {
+                            _initializeLeagueSelection();
+                        }
+                    }
+                });
+            },
+            loading: () {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && !_isLoading) {
+                        setState(() { _isLoading = true; _errorMessage = null; });
+                    }
+                });
+            },
+            error: (err, stack) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && _isLoading) {
+                        setState(() {
+                            _errorMessage = "Error loading league list: ${err.toString()}";
+                            _isLoading = false;
+                        });
+                    }
                 });
             }
-        });
+        );
     }
+
 
     return ScaffoldCustom(
       appBar: CustomAppBar(
@@ -287,14 +310,13 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
                       backgroundColor: Colors.white,
                       builder: (context) {
-                        final leaguesData = ref.watch(userDataProvider);
-                        return leaguesData.when(
-                            data: (user) {
-                              final leagues = user.leagues ?? [];
-                              if (leagues.isEmpty) {
+                        final leaguesDataAsync = ref.watch(userStatusLeaguesProvider);
+                        return leaguesDataAsync.when(
+                            data: (leaguesList) {
+                              if (leaguesList.isEmpty) {
                                   return Container(
                                       padding: EdgeInsets.all(20),
-                                      child: Center(child: Text("You haven\'t joined any leagues yet.", textAlign: TextAlign.center)),
+                                      child: Center(child: Text("You haven't joined any leagues yet.", textAlign: TextAlign.center)),
                                   );
                               }
                               return SafeArea(
@@ -309,11 +331,11 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                                       10.0.heightbox,
                                       Expanded(
                                           child: ListView.separated(
-                                          itemCount: leagues.length,
+                                          itemCount: leaguesList.length,
                                           separatorBuilder: (_, __) => SizedBox.shrink(),
                                           itemBuilder: (context, index) {
-                                              final league = leagues[index];
-                                              return LeagueOptionTile( 
+                                              final league = leaguesList[index];
+                                              return LeagueOptionTile(
                                                 leagueName: league.name ?? "Unnamed League",
                                                 subtitle: '${league.matches?.length ?? 0} matches, ${league.members?.length ?? 0} members',
                                                 onTap: () {
@@ -469,7 +491,7 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                         title: Text("Please select a league first."),
                         type: ToastificationType.warning,
                         style: ToastificationStyle.fillColored,
-                        autoCloseDuration: const Duration(seconds: 4),
+                        autoCloseDuration: const Duration(seconds: 2),
                       );
                       return;
                     }
@@ -481,7 +503,7 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                           title: Text("League name cannot be empty."),
                           type: ToastificationType.warning,
                           style: ToastificationStyle.fillColored,
-                          autoCloseDuration: const Duration(seconds: 4),
+                          autoCloseDuration: const Duration(seconds: 2),
                         );
                         return;
                     }
@@ -497,7 +519,7 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                           title: Text("Invalid number for maximum matches."),
                           type: ToastificationType.warning,
                           style: ToastificationStyle.fillColored,
-                          autoCloseDuration: const Duration(seconds: 4),
+                          autoCloseDuration: const Duration(seconds: 2),
                         );
                         return;
                       }
@@ -524,9 +546,10 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                           title: Text("League settings updated successfully!"),
                           type: ToastificationType.success,
                           style: ToastificationStyle.fillColored,
-                          autoCloseDuration: const Duration(seconds: 4),
+                          autoCloseDuration: const Duration(seconds: 2),
                         );
                         setState(() {
+                          _leagueNameDisplay = _leagueNameController.text.trim();
                           if (newAdminIdOptimistic != null) {
                             _leaguePlayersDisplayList = _leaguePlayersDisplayList.map((player) {
                               return _LeaguePlayerDisplay(
@@ -554,7 +577,7 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                         description: Text(e.toString()),
                         type: ToastificationType.error,
                         style: ToastificationStyle.fillColored,
-                        autoCloseDuration: const Duration(seconds: 5),
+                        autoCloseDuration: const Duration(seconds: 2),
                       );
                     } finally {
                       if (mounted) setState(() => _isSaving = false);
@@ -566,52 +589,39 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                     fontSize: 14,
                     buttonText: "Leave League",
                     onPressFunction: () async {
-                      print("[SettingsScreen] Leave League button TAPPED.");
                       final leagueToLeave = ref.read(selectedLeagueProvider);
                       if (leagueToLeave == null || leagueToLeave.id == null) {
-                        print("[SettingsScreen] Leave League: No league selected.");
                         if (!mounted) return;
                         toastification.show(
                           context: context,
                           title: Text("No league selected."),
                           type: ToastificationType.warning,
                           style: ToastificationStyle.fillColored,
-                          autoCloseDuration: const Duration(seconds: 4),
+                          autoCloseDuration: const Duration(seconds: 2),
                         );
                         return;
                       }
 
                       final leagueName = leagueToLeave.name ?? "this league";
-                      print("[SettingsScreen] Leave League: Attempting to show dialog for league: $leagueName");
-
                       final bool? confirmed = await showDialog<bool>(
-                        context: context, 
-                        builder: (BuildContext dialogContext) { 
-                          print("[SettingsScreen] Leave League: Dialog builder CALLED.");
+                        context: context,
+                        builder: (BuildContext dialogContext) {
                           return AlertDialog(
                             title: Text("Leave League?"),
                             content: Text("Are you sure you want to leave '$leagueName'?"),
                             actions: <Widget>[
                               TextButton(
                                 child: Text("Cancel"),
-                                onPressed: () {
-                                  print("[SettingsScreen] Leave League: Dialog Cancel pressed.");
-                                  Navigator.of(dialogContext).pop(false);
-                                },
+                                onPressed: () => Navigator.of(dialogContext).pop(false),
                               ),
                               TextButton(
                                 child: Text("Leave", style: TextStyle(color: Colors.red)),
-                                onPressed: () {
-                                  print("[SettingsScreen] Leave League: Dialog Leave pressed.");
-                                  Navigator.of(dialogContext).pop(true);
-                                },
+                                onPressed: () => Navigator.of(dialogContext).pop(true),
                               ),
                             ],
                           );
                         },
                       );
-
-                      print("[SettingsScreen] Leave League: Dialog returned: $confirmed");
 
                       if (confirmed == true) {
                         if (!mounted) return;
@@ -624,8 +634,11 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                             title: Text("Successfully left '$leagueName'"),
                             type: ToastificationType.success,
                             style: ToastificationStyle.fillColored,
-                            autoCloseDuration: const Duration(seconds: 4),
+                            autoCloseDuration: const Duration(seconds: 2),
                           );
+                          ref.invalidate(userStatusLeaguesProvider);
+                          ref.read(selectedLeagueProvider.notifier).state = null;
+                          _initializeLeagueSelection();
                         } catch (e) {
                           if (!mounted) return;
                           toastification.show(
@@ -634,13 +647,11 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                             description: Text(e.toString()),
                             type: ToastificationType.error,
                             style: ToastificationStyle.fillColored,
-                            autoCloseDuration: const Duration(seconds: 5),
+                            autoCloseDuration: const Duration(seconds: 2),
                           );
                         } finally {
                           if (mounted) setState(() => _isSaving = false);
                         }
-                      } else {
-                        print("[SettingsScreen] Leave League: Dialog cancelled or dismissed.");
                       }
                     }
                   )),
@@ -690,13 +701,12 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                                 else
                                   GestureDetector(
                                     onTap: () {
-
                                       toastification.show(
                                         context: context,
-                                        title: Text("${player.name} removed"),
-                                        type: ToastificationType.success,
+                                        title: Text("${player.name} remove action (not implemented)"),
+                                        type: ToastificationType.info,
                                         style: ToastificationStyle.fillColored,
-                                        autoCloseDuration: const Duration(seconds: 3),
+                                        autoCloseDuration: const Duration(seconds: 2),
                                       );
                                     },
                                     child: Image.asset(
@@ -719,52 +729,39 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
               Text("Delete this league", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               10.0.heightbox,
               PrimaryButton(width: 130, height: 30, fontSize: 14, onPressFunction: () async {
-                print("[SettingsScreen] Delete League button TAPPED.");
                 final leagueToDelete = ref.read(selectedLeagueProvider);
                 if (leagueToDelete == null || leagueToDelete.id == null) {
-                  print("[SettingsScreen] Delete League: No league selected.");
                   if (!mounted) return;
                   toastification.show(
                     context: context,
                     title: Text("No league selected or league ID is missing."),
                     type: ToastificationType.warning,
                     style: ToastificationStyle.fillColored,
-                    autoCloseDuration: const Duration(seconds: 4),
+                    autoCloseDuration: const Duration(seconds: 2),
                   );
                   return;
                 }
 
                 final leagueName = leagueToDelete.name ?? "this league";
-                print("[SettingsScreen] Delete League: Attempting to show dialog for league: $leagueName");
-
                 final bool? confirmed = await showDialog<bool>(
-                  context: context, 
-                  builder: (BuildContext dialogContext) { 
-                    print("[SettingsScreen] Delete League: Dialog builder CALLED.");
+                  context: context,
+                  builder: (BuildContext dialogContext) {
                     return AlertDialog(
                       title: Text("Delete League?"),
                       content: Text("Are you sure you want to delete '$leagueName'? This action cannot be undone."),
                       actions: <Widget>[
                         TextButton(
                           child: Text("Cancel"),
-                          onPressed: () {
-                            print("[SettingsScreen] Delete League: Dialog Cancel pressed.");
-                            Navigator.of(dialogContext).pop(false);
-                          },
+                          onPressed: () => Navigator.of(dialogContext).pop(false),
                         ),
                         TextButton(
                           child: Text("Delete", style: TextStyle(color: Colors.red)),
-                          onPressed: () {
-                            print("[SettingsScreen] Delete League: Dialog Delete pressed.");
-                            Navigator.of(dialogContext).pop(true);
-                          },
+                          onPressed: () => Navigator.of(dialogContext).pop(true),
                         ),
                       ],
                     );
                   },
                 );
-
-                print("[SettingsScreen] Delete League: Dialog returned: $confirmed");
 
                 if (confirmed == true) {
                   if (!mounted) return;
@@ -777,8 +774,11 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                       title: Text("League '$leagueName' deleted successfully!"),
                       type: ToastificationType.success,
                       style: ToastificationStyle.fillColored,
-                      autoCloseDuration: const Duration(seconds: 4),
+                      autoCloseDuration: const Duration(seconds: 2),
                     );
+                    ref.invalidate(userStatusLeaguesProvider); // Invalidate here
+                    ref.read(selectedLeagueProvider.notifier).state = null;
+                    _initializeLeagueSelection();
                   } catch (e) {
                     if (!mounted) return;
                     toastification.show(
@@ -787,13 +787,11 @@ class LeagueSettingsState extends ConsumerState<LeagueSettings> {
                       description: Text(e.toString()),
                       type: ToastificationType.error,
                       style: ToastificationStyle.fillColored,
-                      autoCloseDuration: const Duration(seconds: 5),
+                      autoCloseDuration: const Duration(seconds: 2),
                     );
                   } finally {
                     if (mounted) setState(() => _isSaving = false);
                   }
-                } else {
-                   print("[SettingsScreen] Delete League: Dialog cancelled or dismissed.");
                 }
               }, buttonText: "Delete League", buttonColor: kredColor),
             ],

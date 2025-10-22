@@ -16,7 +16,7 @@ class AuthScreen extends ConsumerWidget {
       onTap: () => hideKeyboard(context),
       child: ScaffoldCustom(
         body: Container(
-          color: const Color(0xFF286194),
+          color: const Color(0xFF215790),
           child: SingleChildScrollView(
             child: Stack(
               children: [
@@ -41,7 +41,7 @@ class AuthScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      460.0.heightbox,
+                      285.0.heightbox,
                       Padding(
                         padding: defaultPadding(vertical: 20, horizontal: 16),
                         child: Column(
@@ -55,7 +55,7 @@ class AuthScreen extends ConsumerWidget {
                                     authState.isLogin ? "Join" : "Login",
                                 onPressFunction: () => authNotifier
                                     .toggleAuthMode(!authState.isLogin),
-                                width: 90,
+                                width: 70,
                                 height: 38,
                                 buttonColor: Colors.black, // Assuming button color was black
                               ),

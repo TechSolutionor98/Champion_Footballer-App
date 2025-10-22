@@ -56,6 +56,7 @@ dependencies:
   dropdown_button2: ^2.3.9
   syncfusion_flutter_charts: ^31.1.17
   flutter_radar_chart: ^0.2.1
+  image: ^4.0.17  # Add this for image compression
 
 dev_dependencies:
   flutter_test:

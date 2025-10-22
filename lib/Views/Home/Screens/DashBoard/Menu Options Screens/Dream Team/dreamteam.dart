@@ -2,7 +2,7 @@ import 'package:champion_footballer/Model/Api%20Models/dream_team_model.dart';
 import 'package:champion_footballer/Model/Api%20Models/usermodel.dart';
 import 'package:champion_footballer/Services/RiverPord%20Provider/ref_provider.dart';
 import 'package:champion_footballer/Utils/appextensions.dart';
-import 'package:champion_footballer/Utils/packages.dart'; // Ensures global LeagueOptionTile is available via packages.dart
+import 'package:champion_footballer/Utils/packages.dart'; 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DreamTeamScreen extends ConsumerStatefulWidget {
@@ -83,7 +83,6 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
       Map<String, dynamic> slot, LeaguesJoined? selectedLeague) {
     String shirtNumberToDisplay = '...';
 
-    // Get the shirt number from the league member data
     if (selectedLeague != null && selectedLeague.members != null) {
       final leagueMember = selectedLeague.members!.firstWhere(
             (member) => member.id == player.id,
@@ -175,19 +174,20 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userDataAsync = ref.watch(userDataProvider);
+    final userLeaguesAsync = ref.watch(userStatusLeaguesProvider);
     final selectedLeague = ref.watch(selectedLeagueForDreamTeamProvider);
-    final leagues = userDataAsync.when(
-      data: (user) => user.leagues ?? [],
-      loading: () => [],
-      error: (e, s) => [],
+    
+    final leaguesList = userLeaguesAsync.when(
+      data: (leagues) => leagues, 
+      loading: () => <LeaguesJoined>[],
+      error: (e, s) => <LeaguesJoined>[],
     );
 
-    if (selectedLeague == null && leagues.isNotEmpty) {
+    if (selectedLeague == null && leaguesList.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
+        if (mounted && ref.read(selectedLeagueForDreamTeamProvider) == null) { 
           ref.read(selectedLeagueForDreamTeamProvider.notifier).state =
-              leagues.first;
+              leaguesList.first;
         }
       });
     }
@@ -226,7 +226,7 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
                 Expanded(
                   child: Text(
                     selectedLeague?.name ??
-                        (leagues.isNotEmpty ? "Select League" : "No Leagues Joined"),
+                        (leaguesList.isNotEmpty ? "Select League" : "No Leagues Joined"),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -236,7 +236,7 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
                   ),
                 ),
                 SizedBox(width: 8),
-                if (leagues.isNotEmpty)
+                if (leaguesList.isNotEmpty)
                   GestureDetector(
                     onTap: () {
                       showModalBottomSheet(
@@ -262,26 +262,28 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
                                 Divider(color: Colors.grey.shade300, thickness: 1),
                                 10.0.heightbox,
                                 Expanded(
-                                  child: ListView.builder(
-                                    shrinkWrap: true,
-                                    itemCount: leagues.length,
-                                    itemBuilder: (context, index) {
-                                      final leagueToList = leagues[index];
-                                      return LeagueOptionTile( 
-                                        leagueName:
-                                        leagueToList.name ?? "Unnamed League",
-                                        subtitle: '${leagueToList.matches?.length ?? 0} matches, ${leagueToList.users?.length ?? 0} players', // Added subtitle
-                                        onTap: () {
-                                          ref
-                                              .read(
-                                              selectedLeagueForDreamTeamProvider
-                                                  .notifier)
-                                              .state = leagueToList;
-                                          Navigator.pop(context);
-                                        },
-                                      );
-                                    },
-                                  ),
+                                  child: leaguesList.isEmpty
+                                      ? Center(child: Text("No leagues available."))
+                                      : ListView.builder(
+                                          shrinkWrap: true,
+                                          itemCount: leaguesList.length,
+                                          itemBuilder: (context, index) {
+                                            final leagueToList = leaguesList[index];
+                                            return LeagueOptionTile( 
+                                              leagueName:
+                                              leagueToList.name ?? "Unnamed League",
+                                              subtitle: '${leagueToList.matches?.length ?? 0} matches, ${leagueToList.users?.length ?? 0} players',
+                                              onTap: () {
+                                                ref
+                                                    .read(
+                                                    selectedLeagueForDreamTeamProvider
+                                                        .notifier)
+                                                    .state = leagueToList;
+                                                Navigator.pop(context);
+                                              },
+                                            );
+                                          },
+                                        ),
                                 ),
                                 10.0.heightbox,
                               ],
@@ -332,7 +334,7 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
                                     dreamTeamResponse.dreamTeam!, selectedLeague));
                           } else {
                             return Center(
-                                child: Text("No dream team data available.",
+                                child: Text("No dream team data available.", 
                                     style: TextStyle(color: kdefwhiteColor)));
                           }
                         },
@@ -343,11 +345,16 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
                                 style: TextStyle(color: Colors.red))),
                       )
                     else if (selectedLeague != null)
-                      Center(child: CircularProgressIndicator(color: kPrimaryColor))
+                      Center(child: CircularProgressIndicator(color: kPrimaryColor)) 
                     else
-                      Center(
-                          child: Text("Select a league to see the Dream Team",
-                              style: TextStyle(color: kdefwhiteColor))),
+                      userLeaguesAsync.when(
+                          data: (leagues) => Center(
+                              child: Text(leagues.isEmpty ? "No leagues joined." : "Select a league to see the Dream Team",
+                                  style: TextStyle(color: kdefwhiteColor, fontSize: 14), textAlign: TextAlign.center)
+                          ),
+                          loading: () => Center(child: CircularProgressIndicator(color: kPrimaryColor)),
+                          error: (e,s) => Center(child: Text("Error loading leagues.", style: TextStyle(color: kdefwhiteColor))) 
+                      ),
                   ],
                 ),
               ),
@@ -382,7 +389,7 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
                                   dreamTeamResponse.dreamTeam!);
                             } else {
                               return Center(
-                                  child: Text("No player stats available."));
+                                  child: Text("No player stats available.")); 
                             }
                           },
                           loading: () => Center(
@@ -391,7 +398,7 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
                               child: Text('Error: ${err.toString()}',
                                   style: TextStyle(color: Colors.red))),
                         )
-                            : Center(child: Text("Select a league.")),
+                            : Center(child: Text(leaguesList.isEmpty ? "Join a league first" : "Select a league.")),
                       ),
                     ),
                   ],
@@ -429,7 +436,7 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
       itemBuilder: (context, index) {
         final player = allPlayers[index];
         final displayPos = _getDisplayPosition(player.position);
-        return Row( // Using Row for each item
+        return Row( 
           children: [
             Image.asset(
               AppImages.shirt,
@@ -472,6 +479,3 @@ class _DreamTeamScreenState extends ConsumerState<DreamTeamScreen> {
     );
   }
 }
-
-
-

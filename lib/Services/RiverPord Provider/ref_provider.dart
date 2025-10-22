@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 import 'package:champion_footballer/Model/Api%20Models/login_model.dart';
@@ -89,8 +88,17 @@ Future<void> uploadProfilePicture({
         'User not logged in or token is missing for picture upload');
   }
 
+  // Check file size before upload
+  final fileSize = await profileImageFile.length();
+  final fileSizeKB = (fileSize / 1024).toStringAsFixed(2);
+  print("[uploadProfilePicture] File size: $fileSizeKB KB");
+
+  if (fileSize > 1024000) { // If larger than 1MB, warn but continue
+    print("[uploadProfilePicture] ⚠️ Warning: File is quite large ($fileSizeKB KB), may fail");
+  }
+
   final uri = Uri.parse('https://api.techmanagement.tech/profile/picture');
-  final request = http.MultipartRequest('POST', uri);
+  final request = http.MultipartRequest('POST', uri); // ✅ Changed from PATCH to POST
   request.headers['Authorization'] = 'Bearer $token';
 
   final mimeTypeData =
@@ -108,26 +116,43 @@ Future<void> uploadProfilePicture({
     ),
   );
 
-  print("[uploadProfilePicture] Attempting to upload profile picture to $uri");
+  print("[uploadProfilePicture] Uploading to $uri with POST method");
 
   try {
-    final streamedResponse = await request.send();
+    final streamedResponse = await request.send().timeout(
+      const Duration(seconds: 45), // Increased timeout for slower connections
+      onTimeout: () {
+        throw Exception('Upload timeout - server did not respond in 45 seconds');
+      },
+    );
     final response = await http.Response.fromStream(streamedResponse);
 
     print(
-        "[uploadProfilePicture] Response: ${response.statusCode}, ${response.body}");
+        "[uploadProfilePicture] Response: ${response.statusCode}");
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      print("[uploadProfilePicture] Profile picture uploaded successfully.");
+      print("[uploadProfilePicture] ✅ Profile picture uploaded successfully.");
+      
+      // ✅ CRITICAL: Clear image cache BEFORE invalidating provider
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+      
+      // Wait a bit for server to process
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Now invalidate and refresh
       ref.invalidate(userDataProvider);
+      await ref.refresh(userDataProvider.future);
+      
+      print("[uploadProfilePicture] ✅ Cache cleared and data refreshed");
     } else {
       print(
-          "[uploadProfilePicture] Failed to upload profile picture. Body: ${response.body}");
-      throw Exception("Failed to upload profile picture: ${response.body}");
+          "[uploadProfilePicture] ❌ Upload failed. Body: ${response.body}");
+      throw Exception("Failed to upload: ${response.body}");
     }
   } catch (e) {
-    print("[uploadProfilePicture] Error sending request: $e");
-    throw Exception("Error uploading profile picture: $e");
+    print("[uploadProfilePicture] ❌ Error: $e");
+    throw Exception("Error uploading: $e");
   }
 }
 
@@ -729,6 +754,10 @@ Future<void> deleteLeague({
   }
 
   print("[deleteLeague] Attempting to delete league $leagueId. Token: $token");
+  
+  // ✅ Store the current selected league BEFORE deletion
+  final currentSelectedLeague = ref.read(selectedLeagueProvider);
+  final wasDeletingSelectedLeague = currentSelectedLeague?.id == leagueId;
 
   final response = await http.delete(
     Uri.parse('https://api.techmanagement.tech/leagues/$leagueId'),
@@ -743,11 +772,48 @@ Future<void> deleteLeague({
       response.statusCode == 202 ||
       response.statusCode == 204) {
     print("[deleteLeague] League $leagueId deleted successfully.");
+    
+    // ✅ Clear the selected league FIRST (only if we're deleting the currently selected one)
+    if (wasDeletingSelectedLeague) {
+      ref.read(selectedLeagueProvider.notifier).state = null;
+    }
+    
+    // ✅ Invalidate providers
     ref.invalidate(userDataProvider);
     ref.invalidate(leagueSettingsProvider(leagueId));
-    // Also, clear the selected league if it was the one deleted
-    if (ref.read(selectedLeagueProvider)?.id == leagueId) {
-      ref.read(selectedLeagueProvider.notifier).state = null;
+    ref.invalidate(userStatusLeaguesProvider);
+    
+    // ✅ Wait for fresh data
+    await Future.delayed(const Duration(milliseconds: 300));
+    
+    // ✅ Refresh and get fresh user data
+    final freshUser = await ref.refresh(userDataProvider.future);
+    await ref.refresh(userStatusLeaguesProvider.future);
+    
+    // ✅ Auto-select the appropriate league
+    final remainingLeagues = freshUser.leagues ?? [];
+    if (remainingLeagues.isNotEmpty) {
+      LeaguesJoined leagueToSelect;
+      
+      if (wasDeletingSelectedLeague) {
+        // If we deleted the selected league, find the next best option
+        // Try to find the league that was selected before (by checking creation order)
+        // Since we don't have that info, we'll select the first one (oldest)
+        leagueToSelect = remainingLeagues.first;
+        print("[deleteLeague] Deleted selected league, selecting oldest: ${leagueToSelect.name}");
+      } else {
+        // If we deleted a different league, keep the current selection
+        // Find the current selection in the fresh data
+        leagueToSelect = remainingLeagues.firstWhere(
+          (l) => l.id == currentSelectedLeague?.id,
+          orElse: () => remainingLeagues.first,
+        );
+        print("[deleteLeague] Kept current selection: ${leagueToSelect.name}");
+      }
+      
+      ref.read(selectedLeagueProvider.notifier).state = leagueToSelect;
+    } else {
+      print("[deleteLeague] No leagues remaining after deletion");
     }
   } else {
     String errorMessage = "Failed to delete league";
@@ -770,7 +836,6 @@ Future<void> deleteLeague({
     throw Exception(errorMessage);
   }
 }
-
 
 Future<void> leaveLeague({
   required WidgetRef ref,
@@ -883,4 +948,79 @@ final List<Metric> leaderboardMetrics = [
 
 final selectedLeaderboardMetricProvider = StateProvider<String>((ref) {
   return leaderboardMetrics.first.key;
+});
+
+// Added userStatusLeaguesProvider
+final userStatusLeaguesProvider = FutureProvider<List<LeaguesJoined>>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+
+  print("[userStatusLeaguesProvider] Attempting to fetch leagues from /auth/status. Token: $token");
+
+  if (token == null || token.isEmpty) {
+    print("[userStatusLeaguesProvider] No token found, throwing Exception.");
+    throw Exception('User not logged in or token is missing for fetching leagues via /auth/status');
+  }
+
+  final response = await http.get(
+    Uri.parse('https://api.techmanagement.tech/auth/status'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  print("[userStatusLeaguesProvider] Response status: ${response.statusCode}");
+
+  if (response.statusCode == 200) {
+    final jsonResponse = jsonDecode(response.body);
+    if (jsonResponse['success'] == true && jsonResponse['user'] != null) {
+      final userData = jsonResponse['user'] as Map<String, dynamic>;
+      final List<LeaguesJoined> leaguesToReturn = [];
+
+      if (userData['leagues'] != null) {
+        final leaguesList = userData['leagues'] as List;
+        leaguesToReturn.addAll(leaguesList.map((leagueJson) =>
+            LeaguesJoined.fromJson(leagueJson as Map<String, dynamic>)));
+      }
+      
+      // ✅ Sort leagues by creation date (oldest to newest)
+      // This ensures .last always gives the most recently created/joined
+      leaguesToReturn.sort((a, b) {
+        final aDate = a.createdAt;
+        final bDate = b.createdAt;
+        
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return -1;
+        if (bDate == null) return 1;
+        
+        return aDate.compareTo(bDate);
+      });
+
+      print("[userStatusLeaguesProvider] Successfully fetched ${leaguesToReturn.length} leagues (sorted by creation date).");
+      return leaguesToReturn;
+    } else {
+      print("[userStatusLeaguesProvider] Error: 'success' is not true or 'user' object is missing in /auth/status response. Body: ${response.body}");
+      throw Exception('Failed to parse leagues from /auth/status. Response format unexpected.');
+    }
+  } else {
+    print("[userStatusLeaguesProvider] Error fetching leagues from /auth/status. Status: ${response.statusCode}, Body: ${response.body}");
+    throw Exception('Failed to load leagues from /auth/status. Status: ${response.statusCode}');
+  }
+});
+
+final allMatchesProvider = FutureProvider<List<Match>>((ref) async {
+  final response = await http.get(Uri.parse('https://api.techmanagement.tech/matches'));
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = json.decode(response.body);
+    if (data['success'] == true && data['matches'] != null) {
+      final List<dynamic> matchesJson = data['matches'];
+      return matchesJson.map((json) => Match.fromJson(json as Map<String, dynamic>)).toList();
+    } else {
+      throw Exception('API error: ${data['message'] ?? 'Failed to load matches'}');
+    }
+  } else {
+    throw Exception('Failed to load matches: HTTP Status ${response.statusCode}');
+  }
 });

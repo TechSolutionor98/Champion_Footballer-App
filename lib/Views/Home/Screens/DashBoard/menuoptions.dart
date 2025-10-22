@@ -1,12 +1,13 @@
 import 'package:champion_footballer/Utils/appextensions.dart';
 import 'package:champion_footballer/Utils/packages.dart';
 import 'package:champion_footballer/Views/Home/Screens/DashBoard/Menu%20Options%20Screens/Dream%20Team/dreamteam.dart';
+import '../../../../Services/RiverPord Provider/ref_provider.dart';
 
-class DashBoard extends StatelessWidget {
+class DashBoard extends ConsumerWidget {
   const DashBoard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final List<Map<String, dynamic>> data = [
       {
         'image': AppImages.opt1,
@@ -19,7 +20,19 @@ class DashBoard extends StatelessWidget {
         'screen': PlayerListScreen()
       },
       {'image': AppImages.opt2, 'text': 'Leagues', 'screen': LeaguesScreen()},
-      {'image': AppImages.opt3, 'text': 'Matches', 'screen': MatchesScreen()},
+      {
+        'image': AppImages.opt3,
+        'text': 'Matches',
+        'onTap': () async {
+          // Don't refresh, just navigate - the MatchesScreen will sync data
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MatchesScreen()),
+            );
+          }
+        }
+      },
       {'image': AppImages.opt5, 'text': 'Awards', 'screen': TrophyRoomScreen()},
       {
         'image': AppImages.opt6,
@@ -56,12 +69,18 @@ class DashBoard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => data[i]['screen'],
-                          ),
-                        ),
+                        onTap: () {
+                          if (data[i]['onTap'] != null) {
+                            data[i]['onTap']();
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => data[i]['screen'],
+                              ),
+                            );
+                          }
+                        },
                         child: Container(
                           margin: EdgeInsets.all(15.0),
                           decoration: BoxDecoration(
@@ -94,15 +113,20 @@ class DashBoard extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => data[i + 1]['screen'],
-                          ),
-                        ),
+                        onTap: () {
+                          if (data[i + 1]['onTap'] != null) {
+                            data[i + 1]['onTap']();
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => data[i + 1]['screen'],
+                              ),
+                            );
+                          }
+                        },
                         child: Container(
                           margin: const EdgeInsets.all(15.0),
                           decoration: BoxDecoration(

@@ -1,55 +1,3 @@
-/*import 'package:champion_footballer/Model/Api%20Models/leaguemodel.dart';
-class UserModel {
-  final String id;
-  final String email;
-  final String firstName;
-  final String lastName;
-  final String? position;
-  final String? preferredFoot;
-  final String? chemistryStyle;
-  final int? shirtNumber;
-  final int age;
-  final String? pictureKey;
-  final Map<String, int> attributes;
-  final List<League> leaguesJoined; // ✅ new field
-  UserModel({
-    required this.id,
-    required this.email,
-    required this.firstName,
-    required this.lastName,
-    required this.age,
-    this.position,
-    this.preferredFoot,
-    this.chemistryStyle,
-    this.shirtNumber,
-    this.pictureKey,
-    required this.attributes,
-   required this.leaguesJoined,
-  });
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      id: json['id'],
-      email: json['email'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      position: json['position'],
-      preferredFoot: json['preferredFoot'],
-      chemistryStyle: json['chemistryStyle'],
-      shirtNumber: json['shirtNumber'],
-      age: json['age'],
-      pictureKey: json['pictureKey'],
-      attributes: Map<String, int>.from(json['attributes'] ?? {}),
-        leaguesJoined: (json['leaguesJoined'] as List<dynamic>?)
-              ?.map((e) => League.fromJson(e))
-              .toList() ??
-          [],
-    );
-  }
-}
-To parse this JSON data, do*/
-
-
-
 import 'dart:convert';
 
 class Welcome {
@@ -90,6 +38,7 @@ class WelcomeUser {
   DateTime? createdAt;
   DateTime? updatedAt;
   List<LeaguesJoined>? leagues;
+  List<LeaguesJoined>? administeredLeagues;
   List<Statistic>? matchStatistics;
 
   WelcomeUser({
@@ -114,6 +63,7 @@ class WelcomeUser {
     this.createdAt,
     this.updatedAt,
     this.leagues,
+    this.administeredLeagues,
     this.matchStatistics,
   });
 
@@ -126,7 +76,7 @@ class WelcomeUser {
     positionType: json["positionType"],
     position: json["position"],
     preferredFoot: preferredFootValues.map[json["preferredFoot"]],
-    chemistryStyle: json["chemistryStyle"],
+    chemistryStyle: json["style"],
     shirtNumber: json["shirtNumber"],
     attributes: json["skills"] == null
         ? null
@@ -148,6 +98,10 @@ class WelcomeUser {
         ? []
         : List<LeaguesJoined>.from(
         json["leagues"]!.map((x) => LeaguesJoined.fromJson(x))),
+    administeredLeagues: json["administeredLeagues"] == null
+        ? []
+        : List<LeaguesJoined>.from(
+        json["administeredLeagues"]!.map((x) => LeaguesJoined.fromJson(x))),
     matchStatistics: json["matchStatistics"] == null
         ? []
         : List<Statistic>.from(
@@ -164,7 +118,7 @@ class WelcomeUser {
         "positionType": positionType,
         "position": position,
         "preferredFoot": preferredFootValues.reverse[preferredFoot],
-        "chemistryStyle": chemistryStyle,
+        "style": chemistryStyle,
         "shirtNumber": shirtNumber,
         "attributes": attributes?.toJson(),
         "age": age,
@@ -177,6 +131,9 @@ class WelcomeUser {
         "leagues": leagues == null
             ? []
             : List<dynamic>.from(leagues!.map((x) => x.toJson())),
+        "administeredLeagues": administeredLeagues == null
+            ? []
+            : List<dynamic>.from(administeredLeagues!.map((x) => x.toJson())),
         "matchStatistics": matchStatistics == null
             ? []
             : List<dynamic>.from(matchStatistics!.map((x) => x.toJson())),
@@ -255,7 +212,7 @@ class LeaguesJoined {
     return LeaguesJoined(
       id: json["id"],
       name: json["name"],
-      active: json["active"],
+      active: json["status"],
       inviteCode: json["inviteCode"],
       maxGames: json["maxGames"],
       showPoints: json["showPoints"],
@@ -288,7 +245,7 @@ class LeaguesJoined {
   Map<String, dynamic> toJson() => {
     "id": id,
     "name": name,
-    "active": active,
+    "status": active,
     "inviteCode": inviteCode,
     "maxGames": maxGames,
     "showPoints": showPoints,
@@ -942,6 +899,7 @@ class UserElement {
   String? lastName;
   String? displayName;
   String? position;
+  String? positionType;
   PreferredFoot? preferredFoot;
   String? chemistryStyle;
   String? shirtNumber;
@@ -961,6 +919,7 @@ class UserElement {
     this.lastName,
     this.displayName,
     this.position,
+    this.positionType,
     this.preferredFoot,
     this.chemistryStyle,
     this.shirtNumber,
@@ -980,6 +939,7 @@ class UserElement {
         lastName: json["lastName"],
         displayName: json["displayName"],
         position: json["position"],
+        positionType: json["positionType"],
         preferredFoot: preferredFootValues.map[json["preferredFoot"]],
         chemistryStyle: json["chemistryStyle"],
         shirtNumber: json["shirtNumber"],
@@ -1008,6 +968,7 @@ class UserElement {
         "lastName": lastName,
         "displayName": displayName,
         "position": position,
+        "positionType": positionType,
         "preferredFoot": preferredFootValues.reverse[preferredFoot],
         "chemistryStyle": chemistryStyle,
         "shirtNumber": shirtNumber,

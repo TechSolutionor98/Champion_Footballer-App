@@ -4,6 +4,8 @@ import 'package:champion_footballer/Utils/appextensions.dart';
 import 'package:champion_footballer/Utils/packages.dart';
 import '../../../../../../Services/RiverPord Provider/ref_provider.dart';
 import './Widget/playercard.dart';
+// Assuming LeaguesJoined model is accessible, e.g. from usermodel.dart or via userStatusLeaguesProvider type
+// import '../../../../../../Model/Api Models/usermodel.dart'; 
 
 class LeaderBoardScreen extends ConsumerWidget {
   const LeaderBoardScreen({super.key});
@@ -11,32 +13,32 @@ class LeaderBoardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedLeague = ref.watch(selectedLeagueProvider);
-    final userAsync = ref.watch(userDataProvider);
+    // final userAsync = ref.watch(userDataProvider); // Kept if used for other user data, but league list below uses userStatusLeaguesProvider
 
     if (selectedLeague == null) {
-      userAsync.maybeWhen(
-        data: (user) {
-          final leagues = user.leagues ?? [];
-          if (leagues.isNotEmpty) {
+      // Use userStatusLeaguesProvider to get the list of leagues for initial setup
+      ref.watch(userStatusLeaguesProvider).when(
+        data: (leaguesList) { // leaguesList is List<LeaguesJoined>
+          if (leaguesList.isNotEmpty) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              try {
-                final current = ref.read(selectedLeagueProvider);
-                if (current == null) {
-                  ref.read(selectedLeagueProvider.notifier).state = leagues.first;
+              // Check again: ensure selectedLeagueProvider is still null before setting.
+              if (ref.read(selectedLeagueProvider) == null) {
+                try {
+                  ref.read(selectedLeagueProvider.notifier).state = leaguesList.first;
                   ref.read(selectedLeaderboardMetricProvider.notifier).state = leaderboardMetrics.first.key;
+                } catch (_) {
+                  // Consider logging the error or handling it appropriately
                 }
-              } catch (_) {
-
               }
             });
           }
         },
-        orElse: () {},
+        loading: () { /* UI already handles selectedLeague == null, so explicit loading here might not be needed */ },
+        error: (e, s) { /* Optionally handle error, e.g. log it. UI shows general loading message */ },
       );
     }
 
     final currentMetricKey = ref.watch(selectedLeaderboardMetricProvider);
-
     final currentMetric = leaderboardMetrics.firstWhere((m) => m.key == currentMetricKey, orElse: () => leaderboardMetrics.first);
 
     return ScaffoldCustom(
@@ -79,10 +81,10 @@ class LeaderBoardScreen extends ConsumerWidget {
                             backgroundColor: Colors.white,
                             builder: (context) {
                               return Consumer(builder: (context, ref, _) {
-                                final userAsyncModal = ref.watch(userDataProvider);
-                                return userAsyncModal.when(
-                                  data: (user) {
-                                    final leagues = user.leagues ?? [];
+                                // Changed to userStatusLeaguesProvider for the modal
+                                final userLeaguesAsyncModal = ref.watch(userStatusLeaguesProvider);
+                                return userLeaguesAsyncModal.when(
+                                  data: (leaguesList) { // leaguesList is List<LeaguesJoined>
                                     return Container(
                                       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
                                       padding: EdgeInsets.all(16),
@@ -93,13 +95,13 @@ class LeaderBoardScreen extends ConsumerWidget {
                                           Divider(color: Colors.grey.shade300, thickness: 1),
                                           10.0.heightbox,
                                           Flexible(
-                                            child: leagues.isEmpty
+                                            child: leaguesList.isEmpty
                                                 ? Center(child: Text("No leagues joined."))
                                                 : ListView.builder(
                                                     shrinkWrap: true,
-                                                    itemCount: leagues.length,
+                                                    itemCount: leaguesList.length,
                                                     itemBuilder: (context, index) {
-                                                      final league = leagues[index];
+                                                      final league = leaguesList[index];
                                                       return LeagueOptionTile(
                                                         leagueName: league.name ?? "League",
                                                         subtitle: '${league.matches?.length ?? 0} matches, ${league.users?.length ?? 0} players',
@@ -181,7 +183,7 @@ class LeaderBoardScreen extends ConsumerWidget {
                   10.0.heightbox,
                   Consumer(
                     builder: (context, ref, child) {
-                      final leagueIdForApi = selectedLeague.id ?? "";
+                      final leagueIdForApi = selectedLeague.id ?? ""; // selectedLeague is already watched and will be non-null here if logic above worked
                       
                       if (leagueIdForApi.isEmpty) { 
                         return Center(child: Padding(
@@ -218,8 +220,8 @@ class LeaderBoardScreen extends ConsumerWidget {
                                 child: PlayerCard(
                                   name: player.name,
                                   position: player.positionType ?? "-",
-                                  metricLabel: currentMetric.label, // Updated
-                                  metricValue: player.valueAsInt,   // Updated
+                                  metricLabel: currentMetric.label, 
+                                  metricValue: player.valueAsInt,   
                                   image: imageToDisplay,
                                   isNetwork: isNetworkImg, 
                                   imageBottomOffset: (index < bottomOffset.length ? bottomOffset[index] : 0.0),
@@ -279,5 +281,3 @@ class _StatItemWidget extends StatelessWidget {
     );
   }
 }
-
-

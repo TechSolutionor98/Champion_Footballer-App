@@ -46,6 +46,9 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
         type: ToastificationType.error,
         style: ToastificationStyle.fillColored,
         title: const Text("All fields are required"),
+        autoCloseDuration:
+        const Duration(
+            seconds: 2),
       );
       return;
     }
@@ -56,6 +59,9 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
         type: ToastificationType.error,
         style: ToastificationStyle.fillColored,
         title: const Text("Passwords do not match"),
+        autoCloseDuration:
+        const Duration(
+            seconds: 2),
       );
       return;
     }
@@ -109,7 +115,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
           type: ToastificationType.success,
           style: ToastificationStyle.fillColored,
           title: const Text('Signup successful!'),
-          autoCloseDuration: const Duration(seconds: 3),
+          autoCloseDuration: const Duration(seconds: 2),
         );
          print("[RegisterForm - _register] Signup success toast shown.");
       } else {
@@ -149,7 +155,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
           type: ToastificationType.error,
           style: ToastificationStyle.fillColored,
           title: Text(errorMessage),
-          autoCloseDuration: const Duration(seconds: 3),
+          autoCloseDuration: const Duration(seconds: 2),
         );
       } else {
          print("[RegisterForm - _register] Not mounted in error block during signup. Error: $error");

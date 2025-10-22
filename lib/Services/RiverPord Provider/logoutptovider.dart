@@ -121,7 +121,7 @@ class LogoutController {
           type: ToastificationType.success,
           style: ToastificationStyle.fillColored,
           title: const Text('Logout successful!'),
-          autoCloseDuration: const Duration(seconds: 3),
+          autoCloseDuration: const Duration(seconds: 2),
         );
         print("[LogoutController] 'Logout successful!' toast should be shown.");
       } else {
@@ -136,7 +136,7 @@ class LogoutController {
           MaterialPageRoute(builder: (context) => const AuthScreen()),
               (Route<dynamic> route) => false,
         );
-        print("[LogoutController] Navigated to SplashScreen.");
+        print("[LogoutController] Navigated to AuthScreen.");
       } else {
         print("[LogoutController] Context not mounted, cannot navigate.");
       }
@@ -150,6 +150,9 @@ class LogoutController {
           style: ToastificationStyle.fillColored,
           title: const Text('Logout failed'),
           description: Text(e.toString()),
+          autoCloseDuration:
+          const Duration(
+              seconds: 2),
         );
       }
     }

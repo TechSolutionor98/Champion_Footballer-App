@@ -582,13 +582,14 @@ Widget _builSkillMarkingPage(WidgetRef ref) {
                 style: TextStyle(
                     color: ktextColor,
                     fontSize: 14,
-                    fontWeight: FontWeight.bold),
+                    fontWeight: FontWeight.w600),
               ),
-              // 10.0.heightbox,
+              10.0.heightbox,
               StyledContainer(
                 boxShadow: [],
-                borderColor: ktextColor.withValues(alpha: .4),
+                borderColor: ktextColor.withValues(alpha: .2),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     GenderSelectionButton(
                       gender: 'Male',

@@ -33,6 +33,9 @@ void _login() async {
         type: ToastificationType.error,
         style: ToastificationStyle.fillColored,
         title: const Text("Email and Password Required"),
+        autoCloseDuration:
+        const Duration(
+            seconds: 2),
       );
       return;
     }
@@ -72,7 +75,7 @@ void _login() async {
           type: ToastificationType.success,
           style: ToastificationStyle.fillColored,
           title: const Text('Login Successful!'),
-          autoCloseDuration: const Duration(seconds: 3),
+          autoCloseDuration: const Duration(seconds: 2),
         );
          print("[LoginForm - _login] Login success toast shown.");
       } else {
@@ -106,7 +109,7 @@ void _login() async {
           type: ToastificationType.error,
           style: ToastificationStyle.fillColored,
           title: Text(errorMessage),
-          autoCloseDuration: const Duration(seconds: 3),
+          autoCloseDuration: const Duration(seconds: 2),
         );
       } else {
          print("[LoginForm - _login] Not mounted in error block. Error: $error");
@@ -124,9 +127,9 @@ void _login() async {
       toastification.show(
         context: context,
         title: const Text("Please enter your email above first."),
-        type: ToastificationType.info,
+        type: ToastificationType.error,
         style: ToastificationStyle.fillColored,
-        autoCloseDuration: const Duration(seconds: 3),
+        autoCloseDuration: const Duration(seconds: 2),
       );
       return;
     }
@@ -149,7 +152,7 @@ void _login() async {
         type: ToastificationType.success,
         style: ToastificationStyle.fillColored,
         title: const Text("Reset email sent successfully"),
-        autoCloseDuration: const Duration(seconds: 3),
+        autoCloseDuration: const Duration(seconds: 2),
       );
 
       // Navigate to AuthScreen
@@ -173,7 +176,7 @@ void _login() async {
         type: ToastificationType.error,
         style: ToastificationStyle.fillColored,
         title: Text(errorMessage),
-         autoCloseDuration: const Duration(seconds: 3),
+         autoCloseDuration: const Duration(seconds: 2),
       );
     } finally {
       if(mounted){

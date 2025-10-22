@@ -251,8 +251,46 @@ class _LeagueSettingsState extends ConsumerState<LeagueSetting> {
                   );
 
                   if (confirm == true) {
-                    await leaveLeague(
-                        ref: ref, leagueId: league.id!);
+                    setState(() => _isSaving = true);
+                    
+                    try {
+                      await leaveLeague(ref: ref, leagueId: league.id!);
+                      
+                      // Clear selected league FIRST
+                      ref.read(selectedLeagueProvider.notifier).state = null;
+                      
+                      // Then invalidate providers
+                      ref.invalidate(userDataProvider);
+                      ref.invalidate(userStatusLeaguesProvider);
+                      
+                      if (mounted && context.mounted) {
+                        // Show success message
+                        toastification.show(
+                          context: context,
+                          type: ToastificationType.success,
+                          style: ToastificationStyle.fillColored,
+                          title: Text("Left '${league.name}' successfully"),
+                          autoCloseDuration: const Duration(seconds: 2),
+                        );
+                        
+                        // Pop back with true to indicate refresh needed
+                        Navigator.of(context).pop(true);
+                      }
+                    } catch (e) {
+                      if (mounted && context.mounted) {
+                        toastification.show(
+                          context: context,
+                          type: ToastificationType.error,
+                          style: ToastificationStyle.fillColored,
+                          title: Text("Failed to leave league: $e"),
+                          autoCloseDuration: const Duration(seconds: 2),
+                        );
+                      }
+                    } finally {
+                      if (mounted) {
+                        setState(() => _isSaving = false);
+                      }
+                    }
                   }
                 },
                 child: Text(

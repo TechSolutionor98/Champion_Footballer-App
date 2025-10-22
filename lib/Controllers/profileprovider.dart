@@ -1,13 +1,18 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Added for WidgetRef
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:toastification/toastification.dart';
+import 'package:image/image.dart' as img;
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http_parser/http_parser.dart';
 import '../Utils/appextensions.dart';
 import '../Utils/packages.dart';
-import '../Services/RiverPord Provider/ref_provider.dart'; // For uploadProfilePicture
+import '../Services/RiverPord Provider/ref_provider.dart';
 import '../Model/Api Models/usermodel.dart';
 
+const String baseUrl = 'https://api.techmanagement.tech';
 
 class ProfileSelectionUpdateState {
   final File? selectedFile;
@@ -40,7 +45,7 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final newFile = File(pickedFile.path);
-      state = state.copyWith(selectedFile: newFile, isAutoUploading: false); 
+      state = state.copyWith(selectedFile: newFile, isAutoUploading: false);
       return newFile;
     }
     return null;
@@ -50,10 +55,73 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
       final newFile = File(pickedFile.path);
-      state = state.copyWith(selectedFile: newFile, isAutoUploading: false); 
+      state = state.copyWith(selectedFile: newFile, isAutoUploading: false);
       return newFile;
     }
     return null;
+  }
+
+  Future<File> _compressImageAggressively(File imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final image = img.decodeImage(bytes);
+      
+      if (image == null) {
+        throw Exception('Failed to decode image');
+      }
+
+      // Start with 600px max dimension
+      img.Image resized = image;
+      int maxDimension = 600;
+      int quality = 70;
+      
+      // Resize to 600px
+      if (image.width > maxDimension || image.height > maxDimension) {
+        if (image.width > image.height) {
+          resized = img.copyResize(image, width: maxDimension);
+        } else {
+          resized = img.copyResize(image, height: maxDimension);
+        }
+      }
+
+      // Compress and check size
+      var compressedBytes = img.encodeJpg(resized, quality: quality);
+      
+      // Target: under 500KB (512000 bytes)
+      const int maxSizeBytes = 512000;
+      
+      // If still too large, reduce dimensions and quality further
+      while (compressedBytes.length > maxSizeBytes && maxDimension > 200) {
+        print('Image still ${(compressedBytes.length / 1024).toStringAsFixed(2)} KB, reducing...');
+        
+        // Reduce dimension by 20%
+        maxDimension = (maxDimension * 0.8).round();
+        quality = (quality * 0.9).round(); // Also reduce quality
+        
+        if (resized.width > maxDimension || resized.height > maxDimension) {
+          if (resized.width > resized.height) {
+            resized = img.copyResize(resized, width: maxDimension);
+          } else {
+            resized = img.copyResize(resized, height: maxDimension);
+          }
+        }
+        
+        compressedBytes = img.encodeJpg(resized, quality: quality.clamp(30, 100));
+      }
+
+      final tempDir = await Directory.systemTemp.createTemp();
+      final compressedFile = File('${tempDir.path}/profile_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await compressedFile.writeAsBytes(compressedBytes);
+
+      final originalKB = (bytes.length / 1024).toStringAsFixed(2);
+      final compressedKB = (compressedBytes.length / 1024).toStringAsFixed(2);
+      print('✅ Image compression complete: $originalKB KB → $compressedKB KB (${maxDimension}px, Q$quality)');
+
+      return compressedFile;
+    } catch (e) {
+      print('Error compressing image: $e');
+      return imageFile;
+    }
   }
 
   void clearSelectionState() {
@@ -64,9 +132,10 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
     state = state.copyWith(clearSelectedFile: true);
   }
 
-  void _changePhoto(BuildContext sheetContext, WidgetRef ref, {required BuildContext originalContext, bool autoUpload = false}) {
+  void _changePhoto(BuildContext sheetContext, WidgetRef ref,
+      {required BuildContext originalContext, bool autoUpload = false}) {
     showCupertinoModalPopup(
-      context: sheetContext, 
+      context: sheetContext,
       builder: (context) => CupertinoActionSheet(
         actions: [
           Container(
@@ -77,11 +146,11 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
                 style: TextStyle(color: kdefwhiteColor, fontSize: 14),
               ),
               onPressed: () async {
-                Navigator.of(context).pop(); 
-                File? newFile = await getImageFromGallery(); 
+                Navigator.of(context).pop();
+                File? newFile = await getImageFromGallery();
                 if (newFile != null) {
                   if (autoUpload) {
-                    await _initiateAutoUpload(newFile, ref, originalContext); 
+                    await _initiateAutoUpload(newFile, ref, originalContext);
                   }
                 }
               },
@@ -95,11 +164,11 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
                 style: TextStyle(color: kdefwhiteColor, fontSize: 14),
               ),
               onPressed: () async {
-                Navigator.of(context).pop(); 
-                File? newFile = await getImageFromCamera(); 
-                 if (newFile != null) {
+                Navigator.of(context).pop();
+                File? newFile = await getImageFromCamera();
+                if (newFile != null) {
                   if (autoUpload) {
-                    await _initiateAutoUpload(newFile, ref, originalContext); 
+                    await _initiateAutoUpload(newFile, ref, originalContext);
                   }
                 }
               },
@@ -110,12 +179,26 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
     );
   }
 
-  Future<void> _initiateAutoUpload(File imageFile, WidgetRef ref, BuildContext originalContext) async {
-    state = state.copyWith(isAutoUploading: true); 
+  Future<void> _initiateAutoUpload(
+      File imageFile, WidgetRef ref, BuildContext originalContext) async {
+    state = state.copyWith(isAutoUploading: true);
     try {
-      await uploadProfilePicture(ref: ref, profileImageFile: imageFile); 
+      final compressedFile = await _compressImageAggressively(imageFile);
       
-       if (originalContext.mounted) {
+      await uploadProfilePicture(ref: ref, profileImageFile: compressedFile);
+
+      // Clean up compressed file
+      try {
+        if (compressedFile.path != imageFile.path) {
+          await compressedFile.delete();
+        }
+      } catch (_) {}
+
+      // ✅ Additional cache clear
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
+      if (originalContext.mounted) {
         toastification.show(
           context: originalContext,
           type: ToastificationType.success,
@@ -138,14 +221,15 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
         );
       }
     } finally {
-      state = ProfileSelectionUpdateState(); 
+      state = ProfileSelectionUpdateState();
     }
   }
 
-  void showOptions(BuildContext screenContext, WidgetRef ref, {bool autoUpload = false}) async {
+  void showOptions(BuildContext screenContext, WidgetRef ref,
+      {bool autoUpload = false}) async {
     await showCupertinoModalPopup(
-      context: screenContext, 
-      builder: (sheetBuilderContext) => CupertinoActionSheet( 
+      context: screenContext,
+      builder: (sheetBuilderContext) => CupertinoActionSheet(
         actions: [
           Container(
             color: kPrimaryColor,
@@ -155,8 +239,8 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
                 style: TextStyle(color: kdefwhiteColor, fontSize: 14),
               ),
               onPressed: () {
-                Navigator.of(sheetBuilderContext).pop(); 
-                _viewPhoto(screenContext, ref); 
+                Navigator.of(sheetBuilderContext).pop();
+                _viewPhoto(screenContext, ref);
               },
             ),
           ),
@@ -172,7 +256,8 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
               ),
               onPressed: () {
                 Navigator.of(sheetBuilderContext).pop();
-                _changePhoto(screenContext, ref, originalContext: screenContext, autoUpload: autoUpload);
+                _changePhoto(screenContext, ref,
+                    originalContext: screenContext, autoUpload: autoUpload);
               },
             ),
           ),
@@ -194,7 +279,8 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
 
   void _viewPhoto(BuildContext screenContext, WidgetRef ref) {
     final File? localFile = state.selectedFile;
-    final String? networkImageUrl = ref.read(userDataProvider).asData?.value?.pictureKey;
+    final String? networkImageUrl =
+        ref.read(userDataProvider).asData?.value.pictureKey;
 
     ImageProvider? imageProviderToShow;
 
@@ -214,7 +300,7 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch, 
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (imageProviderToShow != null)
                 ClipRRect(
@@ -224,25 +310,28 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
                   ),
                   child: Image(
                     image: imageProviderToShow,
-                    width: 300, 
+                    width: 300,
                     height: 350,
                     fit: BoxFit.cover,
-                    loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                    loadingBuilder: (BuildContext context, Widget child,
+                        ImageChunkEvent? loadingProgress) {
                       if (loadingProgress == null) return child;
-                      return SizedBox( 
+                      return SizedBox(
                         height: 350,
                         child: Center(
                           child: CircularProgressIndicator(
                             value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
                                 : null,
                           ),
                         ),
                       );
                     },
-                    errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                    errorBuilder: (BuildContext context, Object error,
+                        StackTrace? stackTrace) {
                       print("Error loading image in _viewPhoto: $error");
-                      return const SizedBox( 
+                      return const SizedBox(
                         height: 350,
                         child: Center(child: Text('Error displaying image.')),
                       );
@@ -250,11 +339,13 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
                   ),
                 )
               else
-                Padding( 
-                  padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
-                  child: const Text('No picture available for preview.', textAlign: TextAlign.center),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 20.0, horizontal: 10.0),
+                  child: const Text('No picture available for preview.',
+                      textAlign: TextAlign.center),
                 ),
-              Padding( 
+              Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextButton(
                   onPressed: () {
@@ -271,6 +362,7 @@ class ProfileNotifier extends Notifier<ProfileSelectionUpdateState> {
   }
 }
 
-final profileProvider = NotifierProvider<ProfileNotifier, ProfileSelectionUpdateState>(
+final profileProvider =
+    NotifierProvider<ProfileNotifier, ProfileSelectionUpdateState>(
   () => ProfileNotifier(),
 );

@@ -8,6 +8,7 @@ import 'package:champion_footballer/Widgets/genderradiobutton.dart';
 import '../../../../../../../Model/Api Models/usermodel.dart'; // For WelcomeUser type
 import '../../../../../../../Services/RiverPord Provider/ref_provider.dart';
 import 'package:toastification/toastification.dart';
+import 'package:image/image.dart' as img;
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -114,6 +115,61 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _passwordController.dispose();
     _ageController.dispose();
     super.dispose();
+  }
+
+  Future<File> _compressImageAggressively(File imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final image = img.decodeImage(bytes);
+      
+      if (image == null) {
+        throw Exception('Failed to decode image');
+      }
+
+      img.Image resized = image;
+      int maxDimension = 600;
+      int quality = 70;
+      
+      if (image.width > maxDimension || image.height > maxDimension) {
+        if (image.width > image.height) {
+          resized = img.copyResize(image, width: maxDimension);
+        } else {
+          resized = img.copyResize(image, height: maxDimension);
+        }
+      }
+
+      var compressedBytes = img.encodeJpg(resized, quality: quality);
+      const int maxSizeBytes = 512000;
+      
+      while (compressedBytes.length > maxSizeBytes && maxDimension > 200) {
+        print('Image still ${(compressedBytes.length / 1024).toStringAsFixed(2)} KB, reducing...');
+        maxDimension = (maxDimension * 0.8).round();
+        quality = (quality * 0.9).round();
+        
+        if (resized.width > maxDimension || resized.height > maxDimension) {
+          if (resized.width > resized.height) {
+            resized = img.copyResize(resized, width: maxDimension);
+          } else {
+            resized = img.copyResize(resized, height: maxDimension);
+          }
+        }
+        
+        compressedBytes = img.encodeJpg(resized, quality: quality.clamp(30, 100));
+      }
+
+      final tempDir = await Directory.systemTemp.createTemp();
+      final compressedFile = File('${tempDir.path}/profile_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await compressedFile.writeAsBytes(compressedBytes);
+
+      final originalKB = (bytes.length / 1024).toStringAsFixed(2);
+      final compressedKB = (compressedBytes.length / 1024).toStringAsFixed(2);
+      print('✅ Image compression complete: $originalKB KB → $compressedKB KB (${maxDimension}px, Q$quality)');
+
+      return compressedFile;
+    } catch (e) {
+      print('Error compressing image: $e');
+      return imageFile;
+    }
   }
 
   @override
@@ -432,11 +488,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   isSelected: authState.selectedGender == 'Female',
                   onSelected: () => authCtrl.selectGender('Female'),
                 ),
-                 GenderSelectionButton(
-                  gender: 'Other',
-                  isSelected: authState.selectedGender == 'Other',
-                  onSelected: () => authCtrl.selectGender('Other'),
-                ),
+                //  GenderSelectionButton(
+                //   gender: 'Other',
+                //   isSelected: authState.selectedGender == 'Other',
+                //   onSelected: () => authCtrl.selectGender('Other'),
+                // ),
               ],
             ),
           ),
@@ -498,6 +554,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
 
     bool textUpdateSuccess = false;
+    bool imageUploadSuccess = false;
+    
     try {
       await updateProfile(
         ref: ref,
@@ -515,62 +573,94 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
       );
       textUpdateSuccess = true;
-      ref.invalidate(userDataProvider);
 
       if (selectedImageFile != null) {
         try {
-          await uploadProfilePicture(ref: ref, profileImageFile: selectedImageFile);
-          ref.read(profileProvider.notifier).clearSelectionState();
+          final compressedFile = await _compressImageAggressively(selectedImageFile);
+          
+          await uploadProfilePicture(ref: ref, profileImageFile: compressedFile);
+          
+          // Clean up compressed file
+          try {
+            if (compressedFile.path != selectedImageFile.path) {
+              await compressedFile.delete();
+            }
+          } catch (_) {}
+          
+          imageUploadSuccess = true;
+          
+        } catch (imageError) {
+          print("Error uploading profile picture: $imageError");
+          if (mounted && context.mounted) {
+            toastification.show(
+              context: context,
+              type: ToastificationType.warning,
+              style: ToastificationStyle.fillColored,
+              title: Text('Partial Update'),
+              description: Text('Profile details saved, but new picture upload failed'),
+              autoCloseDuration: const Duration(seconds: 5),
+            );
+          }
+        }
+      }
+
+      // ✅ Force complete refresh after all updates
+      if (textUpdateSuccess || imageUploadSuccess) {
+        // Clear all image caches
+        PaintingBinding.instance.imageCache.clear();
+        PaintingBinding.instance.imageCache.clearLiveImages();
+        
+        // Invalidate providers
+        ref.invalidate(userDataProvider);
+        
+        // Wait for server
+        await Future.delayed(const Duration(milliseconds: 800));
+        
+        // Force fresh fetch
+        await ref.refresh(userDataProvider.future);
+        
+        // Clear profile selection
+        ref.read(profileProvider.notifier).clearSelectionState();
+      }
+
+      if (mounted && context.mounted) {
+        if (imageUploadSuccess) {
           toastification.show(
             context: context,
             type: ToastificationType.success,
             style: ToastificationStyle.fillColored,
             title: Text('Profile Updated'),
             description: Text('Profile and picture updated successfully!'),
-            autoCloseDuration: const Duration(seconds: 4),
+            autoCloseDuration: const Duration(seconds: 3),
           );
-        } catch (imageError) {
-          print("Error uploading profile picture: $imageError");
+        } else if (textUpdateSuccess) {
           toastification.show(
             context: context,
-            type: ToastificationType.warning,
+            type: ToastificationType.success,
             style: ToastificationStyle.fillColored,
-            title: Text('Partial Update'),
-            description: Text('Profile details saved, but new picture upload failed: ${imageError.toString()}'),
-            autoCloseDuration: const Duration(seconds: 7),
+            title: Text('Profile Updated'),
+            description: Text('Profile details updated successfully!'),
+            autoCloseDuration: const Duration(seconds: 2),
           );
         }
-      } else if (textUpdateSuccess) {
-        ref.read(profileProvider.notifier).clearSelectionState();
-        toastification.show(
-          context: context,
-          type: ToastificationType.success,
-          style: ToastificationStyle.fillColored,
-          title: Text('Profile Updated'),
-          description: Text('Profile details updated successfully!'),
-          autoCloseDuration: const Duration(seconds: 4),
-        );
-      }
-      
-      if (mounted && textUpdateSuccess) {
-        final ProfileSelectionUpdateState currentProfileState = ref.read(profileProvider);
-        bool imageUploadAttemptedAndFailed = selectedImageFile != null && currentProfileState.selectedFile == selectedImageFile;
-
-        if (!imageUploadAttemptedAndFailed) { 
-            Navigator.pop(context);
+        
+        if (textUpdateSuccess) {
+          Navigator.pop(context, true);
         }
       }
 
     } catch (e) {
       print("Error updating profile (text data): $e");
-      toastification.show(
-        context: context,
-        type: ToastificationType.error,
-        style: ToastificationStyle.fillColored,
-        title: Text('Update Failed'),
-        description: Text('Failed to update profile details: ${e.toString()}'),
-        autoCloseDuration: const Duration(seconds: 5),
-      );
+      if (mounted && context.mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          style: ToastificationStyle.fillColored,
+          title: Text('Update Failed'),
+          description: Text('Failed to update profile: ${e.toString()}'),
+          autoCloseDuration: const Duration(seconds: 5),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
